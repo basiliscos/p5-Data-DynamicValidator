@@ -5,6 +5,9 @@ use warnings;
 
 use Carp;
 use Scalar::Util qw/looks_like_number/;
+use Storable qw(dclone);
+
+use aliased qw/Data::DynamicValidator::Path/;
 
 use overload
     '&{}' => sub {
@@ -37,7 +40,7 @@ sub validate {
 
     croak("Wrong arguments: 'on', 'should', 'because' should be specified")
         if(!$on || !$should || !$because);
-    
+
 }
 
 =method select
@@ -70,22 +73,10 @@ values from data, e.g.
 =cut
 
 sub select {
-    my ($self, $expession) = @_;
-    my @routes = split('/', $expession);
-    my $result = {};
-    my $current = $self->{_data};
-    for my $i (0 .. @routes-1 ) {
-        my $element = $routes[$i];
-        last unless defined($current);
-        next if($element eq '');
-        if (ref($current) eq 'HASH' && exists $current->{$element}) {
-            $current = $current->{$element};
-            next;
-        }
-        if ($element eq '*') {
-        }
-    }
-    return $result;
+    # my ($self, $expession) = @_;
+    # my $routes = $self->expand_routes($expession);
+    
+    # return $result;
 }
 
 
@@ -106,14 +97,14 @@ Takes xpath-like expandable expression and sorted array of exapnded path e.g.
 
 sub expand_routes {
     my ($self, $expession) = @_;
-    my @routes = ($expession);
+    my @routes = ( Path->new($expession) );
     my $result = [];
     while (@routes) {
         my $route = shift(@routes);
         my $current = $self->{_data};
-        my @elements = split('/', $route);
-        for my $i (0 .. @elements-1 ) {
-            my $element = $elements[$i];
+        my $elements = $route->components;
+        for my $i (0 .. @$elements-1 ) {
+            my $element = $elements->[$i];
             # no futher examination if current value is undefined
             last unless defined($current);
             next if($element eq '');
@@ -144,10 +135,9 @@ sub expand_routes {
             }
             if ($generator) {
                 while ( defined( my $new_element = $generator->()) ) {
-                    my @new_elements = @elements;
-                    $new_elements[$i] = $new_element;
-                    my $new_route = join('/', @new_elements);
-                    push @routes, $new_route;
+                    my $new_path = dclone($route);
+                    $new_path->components->[$i] = $new_element;
+                    push @routes, $new_path;
                 }
                 $current = undef;
                 last;
@@ -157,7 +147,8 @@ sub expand_routes {
             # else current path
             $current = undef;
         }
-        push @$result, $route if(defined $current);
+        push @$result, $route
+            if(defined $current);
     }
     return [ sort @$result ];
 }

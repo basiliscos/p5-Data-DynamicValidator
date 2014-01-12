@@ -13,7 +13,10 @@ sub _v {
 
 sub _e {
     my ($data, $selector) = @_;
-    return validator($data)->expand_routes($selector);
+    my $routes = [
+        map { "$_" } @{ validator($data)->expand_routes($selector) }
+    ];
+    return $routes;
 }
 
 # routes expansion
@@ -58,6 +61,24 @@ sub _e {
 
     $r = _e([{ a => { b => [5,'z']} }], '/*/*/*/1');
     is_deeply( $r, ['/0/a/b/1']);
+}
+
+# check named routes
+{
+    my $r;
+    $r = validator({ a => { b => [5,'z']} })->expand_routes('/*/v2:*/*');
+    is_deeply [ map { "$_" } @$r], ['/a/b/0', '/a/b/1'];
+    is $r->[0]->named_route('v2')->to_string, '/a/b', 'has v2 at 1st route';
+    is $r->[1]->named_route('v2')->to_string, '/a/b', 'has v2 at 2nd route';
+
+    $r = validator({ a => { b => [5,'z']} })->expand_routes('/v1:*/v2:*/v3:0');
+    is_deeply [ map { "$_" } @$r], ['/a/b/0'], 'expands correctly';
+    my $p = $r->[0];
+    is_deeply [$p->labels], ['v1', 'v2', 'v3'], 'all labels mentioned';
+
+    is $p->named_route('v1')->to_string, '/a'    , 'v1 present';
+    is $p->named_route('v2')->to_string, '/a/b'  , 'v2 present';
+    is $p->named_route('v3')->to_string, '/a/b/0', 'v3 present';
 }
 
 
