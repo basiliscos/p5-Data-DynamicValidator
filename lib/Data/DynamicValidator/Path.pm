@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 use Carp;
+use Scalar::Util qw/looks_like_number/;
 
 use overload fallback => 1, q/""/ => sub { $_[0]->to_string };
 
@@ -59,9 +60,28 @@ sub _clone_to {
     return Data::DynamicValidator::Path->new($path);
 }
 
-# sub value {
-#     my ($self, $label) = @_;
-#     my $idx = $label ? $self->_
-# }
+sub value {
+    my ($self, $data, $label) = @_;
+    croak("No label '$label' in path '$self'")
+        if(defined($label) && !exists $self->{_labels}->{$label});
+    my $idx = defined($label)
+        ? $self->{_labels}->{$label}
+        : @{ $self->{_components} } - 1;
+    my $value = $data;
+    for my $i (1 .. $idx) {
+        my $element = $self->{_components}->[$i];
+        if (ref($value) && ref($value) eq 'HASH' && exists $value->{$element}) {
+            $value = $value->{$element};
+            next;
+        }
+        elsif (ref($value) && ref($value) eq 'ARRAY'
+            && looks_like_number($element) && $element < @$value) {
+            $value = $value->[$element];
+            next;
+        }
+        croak "I don't know how to get element#$i ($element) at $self";
+    }
+    return $value;
+}
 
 1;

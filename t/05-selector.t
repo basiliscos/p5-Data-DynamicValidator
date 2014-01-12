@@ -81,6 +81,16 @@ sub _e {
     is $p->named_route('v3')->to_string, '/a/b/0', 'v3 present';
 }
 
+# check values at routes
+{
+    my $data = { a => { b => [5,'z']} };
+    my $p = validator($data)->expand_routes('/v1:*/v2:*/v3:0')->[0];
+    is $p->value($data), 5, 'got 5';
+    is $p->value($data, 'v3'), 5, 'got 5 (via label)';
+    is_deeply $p->value($data, 'v2'), [5, 'z'], 'got correct values for v2';
+    is_deeply $p->value($data, 'v1'), { b=> [5, 'z'] }, 'got correct values for v1)';
+}
+
 
 #my $r;
 
