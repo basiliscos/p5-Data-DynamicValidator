@@ -18,19 +18,14 @@ sub new {
 sub _build_components {
     my ($self, $path) = @_;
     my @elements = split('/', $path);
-    my @named_elements = ();
     for my $i (0..@elements-1) {
         my @parts = split(':', $elements[$i]);
         if (@parts > 1) {
             $elements[$i] = $parts[1];
-            push @named_elements, {
-                index => $i,
-                name  => $parts[0],
-            };
+            $self->{_labels}->{ $parts[0] } = $i;
         }
     }
     $self->{_components} = \@elements;
-    $self->{_labels    } = \@named_elements;
 }
 
 sub components { shift->{_components} }
@@ -38,18 +33,16 @@ sub components { shift->{_components} }
 sub to_string { join('/', @{ shift->{_components} })}
 
 sub labels {
-    map { $_->{name} } @{ shift->{_labels} };
+    my $self = shift;
+    my $labels = $self->{_labels};
+    sort { $labels->{$a} <=> $labels->{$b} } keys %$labels;
 }
 
 sub named_route {
     my ($self, $label) = @_;
-    for my $i ( 0 .. @{ $self->{_labels} } ) {
-        my $l = $self->{_labels}->[$i];
-        if ($l->{name} eq $label) {
-            return $self->_clone_to($l->{index});
-        }
-    }
-    croak("No label '$label' in path '$self'");
+    croak("No label '$label' in path '$self'")
+        unless exists $self->{_labels}->{$label};
+    return $self->_clone_to($self->{_labels}->{$label});
 }
 
 sub _clone_to {
@@ -58,13 +51,17 @@ sub _clone_to {
     for my $i (0 .. $index) {
         push @components, $self->{_components}->[$i]
     }
-    for my $label ( @{ $self->{_labels} } ) {
-        my $i = $label->{index};
-        $components[$i] = join(':', $label->{name}, $components[$i] )
-            if( $i <= $index);
+    while ( my ($name, $idx) = each(%{ $self->{_labels} })) {
+        $components[$idx] = join(':', $name, $components[$idx])
+            if( $idx <= $index);
     }
     my $path = join('/', @components);
     return Data::DynamicValidator::Path->new($path);
 }
+
+# sub value {
+#     my ($self, $label) = @_;
+#     my $idx = $label ? $self->_
+# }
 
 1;
