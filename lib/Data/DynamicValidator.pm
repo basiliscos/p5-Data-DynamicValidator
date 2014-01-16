@@ -51,32 +51,23 @@ values from data, e.g.
  validator({ a => [5,'z']})->select('/a/*');
  # will return
  # {
- #   '/a/0' => 5,
- #   '/a/1' => 'z',
+ #   routes => ['/a/0', '/a/1']  => 5,
+ #   values => [5, z],
  # }
 
-
- validator({ a => [5,'z']})->select('/a');
- # will return
- # {
- #   '/a' => [5, 'z']
- # }
-
- validator({ a => { b => [5,'z'], c => ['y']} })->select('/a/*/*');
- # will return
- # {
- #   '/a/b/0' => 5,
- #   '/a/b/1' => 'z',
- #   '/a/c/0' => 'y',
- # }
+Actualy routes are presented by Path objects.
 
 =cut
 
 sub select {
-    # my ($self, $expession) = @_;
-    # my $routes = $self->expand_routes($expession);
-    
-    # return $result;
+    my ($self, $expession) = @_;
+    my $data = $self->{_data};
+    my $routes = $self->expand_routes($expession);
+    my $values = [ map { $_->value($data) } @$routes ];
+    return {
+        routes => $routes,
+        values => $values,
+    };
 }
 
 
@@ -152,6 +143,13 @@ sub expand_routes {
     }
     return [ sort @$result ];
 }
+
+sub apply {
+    my ($self, $on, $should) = @_;
+    my $selection_results = $self->select($on);
+    my $result = $should->($selection_results->{values});
+    return $result;
+};
 
 sub is_valid {
     my $self = shift;

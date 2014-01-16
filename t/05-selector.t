@@ -91,7 +91,14 @@ sub _e {
     is_deeply $p->value($data, 'v1'), { b=> [5, 'z'] }, 'got correct values for v1)';
 }
 
-
+# check selector
+{
+    my $r;
+    $r = validator({ a => { b => [5,'z']} })->select('/*/*/*');
+    is_deeply $r->{values}, [5, 'z'], "got correct 'values' on selector";
+    my $routes = [ map { "$_" } @{ $r->{routes} } ];
+    is_deeply  $routes, ['/a/b/0', '/a/b/1'], "got correct 'routes' on selector";
+};
 #my $r;
 
 
