@@ -1,4 +1,5 @@
 package Data::DynamicValidator;
+# ABSTRACT: XPath-like and Perl union for flexible perl data structures validation
 
 use strict;
 use warnings;
@@ -7,9 +8,11 @@ use Carp;
 use Scalar::Util qw/looks_like_number/;
 use Storable qw(dclone);
 
+use aliased qw/Data::DynamicValidator::Error/;
 use aliased qw/Data::DynamicValidator::Path/;
 
 use overload
+    fallback => 1,
     '&{}' => sub {
         my $self = shift;
         return sub { $self->validate(@_) }
@@ -31,6 +34,10 @@ sub new {
     return bless $self => $class;
 }
 
+=method validate
+
+=cut
+
 sub validate {
     my ($self, %args) = @_;
 
@@ -41,6 +48,14 @@ sub validate {
     croak("Wrong arguments: 'on', 'should', 'because' should be specified")
         if(!$on || !$should || !$because);
 
+    my $errors = $self->{_errors};
+    if ( !@$errors ) {
+        my $success = $self->apply($on, $should);
+        push @$errors, Error->new($because, $on)
+            unless $success;
+    }
+
+    return $self;
 }
 
 =method select
@@ -151,9 +166,8 @@ sub apply {
     return $result;
 };
 
-sub is_valid {
-    my $self = shift;
-    @{ $self->{_errors} } == 0;
-}
+sub is_valid { @{ $_[0]->{_errors} } == 0; }
+
+sub errors { $_[0]->{_errors} }
 
 1;
