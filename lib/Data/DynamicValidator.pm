@@ -147,7 +147,7 @@ sub expand_routes {
 sub apply {
     my ($self, $on, $should) = @_;
     my $selection_results = $self->select($on);
-    my $result = $should->($selection_results->{values});
+    my $result = $should->( @{ $selection_results->{values} } );
     return $result;
 };
 

@@ -26,10 +26,14 @@ use Data::DynamicValidator qw/validator/;
 {
     my $data = { listen => [3000, 3001], };
     my $r;
-    $r = validator($data)->apply('/listen/*'=> sub { @_ > 0 });
+    $r = validator($data)->apply('/listen/*'=> sub { @_ == 2 });
     ok $r, "positive simple path appliaction";
     $r = validator($data)->apply('/listen/*'=> sub { @_ > 2 });
     ok !$r, "simple path appliaction passed with false condition";
+    $r = validator($data)->apply('/ABC/*' => sub { @_ == 0; });
+    ok $r, "void path appliaction with positve condition";
+    $r = validator($data)->apply('/ABC/*'=> sub { @_ > 0 });
+    ok !$r, "void path appliaction with false condition";
 }
 
 
