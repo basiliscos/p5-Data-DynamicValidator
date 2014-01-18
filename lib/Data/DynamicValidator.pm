@@ -30,6 +30,7 @@ sub new {
     my $self = {
         _data   => $data,
         _errors => [],
+        _level  => 0,
     };
     return bless $self => $class;
 }
@@ -44,15 +45,31 @@ sub validate {
     my $on      = $args{on     };
     my $should  = $args{should };
     my $because = $args{because};
+    my $each    = $args{each   };
 
     croak("Wrong arguments: 'on', 'should', 'because' should be specified")
         if(!$on || !$should || !$because);
 
     my $errors = $self->{_errors};
+    my $selection_results;
     if ( !@$errors ) {
-        my $success = $self->apply($on, $should);
+        my $success;
+        ($success, $selection_results) = $self->apply($on, $should);
         push @$errors, Error->new($because, $on)
             unless $success;
+    }
+    # OK, now going to child rules if there is no errors
+    if ( !@$errors && $each  ) {
+        my ($routes, $values) = @{$selection_results}{qw/routes values/};
+        $self->{_level}++;
+        for my $i (0 .. @$routes-1) {
+            my $route = $routes->[$i];
+            my $value = $values->[$i];
+            my $last_component = $route->components->[-1];
+            $each->($self, local $_ = $last_component);
+            last if(@$errors);
+        }
+        $self->{_level}--;
     }
 
     return $self;
@@ -163,7 +180,7 @@ sub apply {
     my ($self, $on, $should) = @_;
     my $selection_results = $self->select($on);
     my $result = $should->( @{ $selection_results->{values} } );
-    return $result;
+    return ($result, $selection_results);
 };
 
 sub is_valid { @{ $_[0]->{_errors} } == 0; }
