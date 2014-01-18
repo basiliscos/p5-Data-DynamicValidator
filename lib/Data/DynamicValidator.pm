@@ -5,6 +5,8 @@ use strict;
 use warnings;
 
 use Carp;
+use Devel::LexAlias qw(lexalias);
+use PadWalker qw(peek_sub);
 use Scalar::Util qw/looks_like_number/;
 use Storable qw(dclone);
 
@@ -60,19 +62,38 @@ sub validate {
     }
     # OK, now going to child rules if there is no errors
     if ( !@$errors && $each  ) {
-        my ($routes, $values) = @{$selection_results}{qw/routes values/};
-        $self->{_level}++;
-        for my $i (0 .. @$routes-1) {
-            my $route = $routes->[$i];
-            my $value = $values->[$i];
-            my $last_component = $route->components->[-1];
-            $each->($self, local $_ = $last_component);
-            last if(@$errors);
-        }
-        $self->{_level}--;
+        $self->_validate_children($selection_results, $each);
     }
 
     return $self;
+}
+
+sub _validate_children {
+    my ($self, $selection_results, $each) = @_;
+    my ($routes, $values) = @{$selection_results}{qw/routes values/};
+    my $errors = $self->{_errors};
+    $self->{_level}++;
+    for my $i (0 .. @$routes-1) {
+        my $route = $routes->[$i];
+        my $value = $values->[$i];
+        my $last_component = $route->components->[-1];
+        my $label_of = {
+            map { $_ => $route->named_component($_) }
+                ($route->labels)
+        };
+        # prepare context
+        my $pad = peek_sub($each);
+        while (my ($var, $ref) = each %$pad) {
+            my $var_name = substr($var, 1); # chomp sigil
+            next unless exists $label_of->{$var_name};
+            my $label_name = $label_of->{$var_name};
+            lexalias($each, $var, \$label_name);
+        }
+        # call
+        $each->($self, local $_ = $last_component);
+        last if(@$errors);
+    }
+    $self->{_level}--;
 }
 
 =method select

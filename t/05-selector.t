@@ -87,6 +87,9 @@ sub _e {
     my $p = validator($data)->expand_routes('/v1:*/v2:*/v3:0')->[0];
     is $p->value($data), 5, 'got 5';
     is $p->value($data, 'v3'), 5, 'got 5 (via label)';
+    is $p->named_component('v3'), 0, 'got correct label value for v3';
+    is $p->named_component('v2'), 'b', 'got correct label value for v2';
+    is $p->named_component('v1'), 'a', 'got correct label value for v1';
     is_deeply $p->value($data, 'v2'), [5, 'z'], 'got correct values for v2';
     is_deeply $p->value($data, 'v1'), { b=> [5, 'z'] }, 'got correct values for v1)';
 }
@@ -99,10 +102,5 @@ sub _e {
     my $routes = [ map { "$_" } @{ $r->{routes} } ];
     is_deeply  $routes, ['/a/b/0', '/a/b/1'], "got correct 'routes' on selector";
 };
-#my $r;
-
-
-# my $r = _v({ a => [5,'z']}, '/a');
-# is_deeply( $r, [5, 'z']);
 
 done_testing;

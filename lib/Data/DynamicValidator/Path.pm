@@ -46,6 +46,14 @@ sub named_route {
     return $self->_clone_to($self->{_labels}->{$label});
 }
 
+sub named_component {
+    my ($self, $label) = @_;
+    croak("No label '$label' in path '$self'")
+        unless exists $self->{_labels}->{$label};
+    my $idx = $self->{_labels}->{$label};
+    return $self->{_components}->[$idx];
+}
+
 sub _clone_to {
     my ($self, $index) = @_;
     my @components;
