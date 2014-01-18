@@ -66,7 +66,7 @@ test_validator(
 );
 
 subtest 'simple-1-children-negative' => sub {
-    my $data = { listen => [1, -3001], };
+    my $data = { listen => [5, -11, -3001], };
     my $v = validator($data);
     $v->(
         on      => '/listen/*',
@@ -81,6 +81,8 @@ subtest 'simple-1-children-negative' => sub {
         },
     );
     ok !$v->is_valid, "invalid on invalid and simple 'each' test";
+    is @{ $v->errors }, 1, "got exactly 1 error";
+    is $v->errors->[0]->reason, 'port should be positive', 'got error reason';
 };
 
 subtest 'simple-1-children-positive' => sub {
