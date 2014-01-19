@@ -1,5 +1,5 @@
 package Data::DynamicValidator;
-# ABSTRACT: XPath-like and Perl union for flexible perl data structures validation
+#ABSTRACT: XPath-like and Perl union for flexible perl data structures validation
 
 use strict;
 use warnings;
