@@ -23,6 +23,8 @@ use overload
 use parent qw/Exporter/;
 our @EXPORT_OK = qw/validator/;
 
+use constant DEBUG => $ENV{DATA_DYNAMICVALIDATOR_DEBUG} || 0;
+
 sub validator {
     return Data::DynamicValidator->new(@_);
 }
@@ -52,6 +54,8 @@ sub validate {
     croak("Wrong arguments: 'on', 'should', 'because' should be specified")
         if(!$on || !$should || !$because);
 
+    warn "-- validating : $on \n" if DEBUG;
+
     my $errors = $self->{_errors};
     my $selection_results;
     if ( !@$errors ) {
@@ -62,6 +66,7 @@ sub validate {
     }
     # OK, now going to child rules if there is no errors
     if ( !@$errors && $each  ) {
+        warn "-- no errors, will check children\n" if DEBUG;
         $self->_validate_children($selection_results, $each);
     }
 
@@ -141,6 +146,7 @@ Takes xpath-like expandable expression and sorted array of exapnded path e.g.
 
 sub expand_routes {
     my ($self, $expession) = @_;
+    warn "-- Expanding routes for $expession\n" if DEBUG;
     my @routes = ( Path->new($expession) );
     my $result = [];
     while (@routes) {
@@ -191,6 +197,7 @@ sub expand_routes {
             # else current path
             $current = undef;
         }
+        warn "-- Expanded route : $route \n" if(DEBUG && defined($current));
         push @$result, $route
             if(defined $current);
     }
