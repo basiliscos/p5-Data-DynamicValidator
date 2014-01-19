@@ -11,6 +11,8 @@ use Scalar::Util qw/looks_like_number/;
 
 use overload fallback => 1, q/""/ => sub { $_[0]->to_string };
 
+use constant DEBUG => $ENV{DATA_DYNAMICVALIDATOR_DEBUG} || 0;
+
 sub new {
     my ($class, $path) = @_;
     my $self = { };
@@ -92,6 +94,7 @@ sub value {
         }
         croak "I don't know how to get element#$i ($element) at $self";
     }
+    warn "-- value for $self is $value\n" if DEBUG;
     return $value;
 }
 
