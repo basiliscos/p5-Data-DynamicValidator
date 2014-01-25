@@ -74,11 +74,12 @@ sub _e {
     $r = validator({ a => { b => [5,'z']} })->expand_routes('/v1:*/v2:*/v3:0');
     is_deeply [ map { "$_" } @$r], ['/a/b/0'], 'expands correctly';
     my $p = $r->[0];
-    is_deeply [$p->labels], ['v1', 'v2', 'v3'], 'all labels mentioned';
+    is_deeply [$p->labels], ['v1', 'v2', 'v3', '_'], 'all labels mentioned';
 
     is $p->named_route('v1')->to_string, '/a'    , 'v1 present';
     is $p->named_route('v2')->to_string, '/a/b'  , 'v2 present';
     is $p->named_route('v3')->to_string, '/a/b/0', 'v3 present';
+    is $p->named_route('_')->to_string,  '/a/b/0', '_ present';
 }
 
 # check values at routes

@@ -14,6 +14,7 @@ use Scalar::Util qw/looks_like_number/;
 use Storable qw(dclone);
 
 use aliased qw/Data::DynamicValidator::Error/;
+use aliased qw/Data::DynamicValidator::Label/;
 use aliased qw/Data::DynamicValidator::Path/;
 
 use overload
@@ -77,25 +78,22 @@ sub _validate_children {
     my ($self, $selection_results, $each) = @_;
     my ($routes, $values) = @{$selection_results}{qw/routes values/};
     my $errors = $self->{_errors};
+    my $data = $self->{_data};
     $self->{_level}++;
     for my $i (0 .. @$routes-1) {
         my $route = $routes->[$i];
         my $value = $values->[$i];
-        my $last_component = $route->components->[-1];
-        my $label_of = {
-            map { $_ => $route->named_component($_) }
-                ($route->labels)
-        };
+        my $label_for = { map { $_ => 1 } ($route->labels) };
         # prepare context
         my $pad = peek_sub($each);
         while (my ($var, $ref) = each %$pad) {
             my $var_name = substr($var, 1); # chomp sigil
-            next unless exists $label_of->{$var_name};
-            my $label_name = $label_of->{$var_name};
-            lexalias($each, $var, \$label_name);
+            next unless exists $label_for->{$var_name};
+            my $label_obj = Label->new($var_name, $route, $data);
+            lexalias($each, $var, \$label_obj);
         }
         # call
-        $each->($self, local $_ = $last_component);
+        $each->($self, local $_ = Label->new('_', $route, $data));
         last if(@$errors);
     }
     $self->{_level}--;
