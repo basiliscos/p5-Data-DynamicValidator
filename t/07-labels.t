@@ -14,19 +14,40 @@ subtest 'simple-labels' => sub {
         ],
     };
     my $v = validator($data);
-    my @vars;
+    my @variables;
+    my @values;
     $v->(
         on      => '/hash1:*/array:*/hash2:*',
         should  => sub { @_ > 0 },
         because => '...ignored...',
         each    => sub {
             my ($hash1, $array, $hash2);
-            push @vars, join('/', '', $hash1, $array, $hash2);
+            push @variables, join('/', '', $hash1, $array, $hash2);
+            push @values, {
+                hash1 => $hash1->(),
+                hash2 => $hash2->(),
+                array => $array->(),
+                _     => $_->(),
+            }
         },
     );
     ok $v->is_valid;
-    is_deeply \@vars, ['/a/0/b', '/a/1/c'],
+    is_deeply \@variables, ['/a/0/b', '/a/1/c'],
         "labels extraction/substitution works well";
+
+    subtest 'values for 1st expanded route' => sub {
+        is_deeply $values[0]->{hash1}, [{ b => 5}, { c => 7}];
+        is_deeply $values[0]->{array}, { b => 5};
+        is_deeply $values[0]->{hash2}, 5;
+        is_deeply $values[0]->{_}, 5;
+    };
+
+    subtest 'values for 2nd expanded route' => sub {
+        is_deeply $values[1]->{hash1}, [{ b => 5}, { c => 7}];
+        is_deeply $values[1]->{array}, { c => 7};
+        is_deeply $values[1]->{hash2}, 7;
+        is_deeply $values[1]->{_}, 7;
+    };
 };
 
 subtest 'simple-labels-in-path' => sub {

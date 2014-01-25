@@ -28,6 +28,8 @@ sub _build_components {
             $self->{_labels}->{ $parts[0] } = $i;
         }
     }
+    # special name _ for the last route component
+    $self->{_labels}->{'_'} = @elements-1;
     $self->{_components} = \@elements;
 }
 
@@ -64,19 +66,25 @@ sub _clone_to {
     }
     while ( my ($name, $idx) = each(%{ $self->{_labels} })) {
         $components[$idx] = join(':', $name, $components[$idx])
-            if( $idx <= $index);
+            if( $idx <= $index && $name ne '_');
     }
     my $path = join('/', @components);
     return Data::DynamicValidator::Path->new($path);
 }
 
+=method value
+
+Returns data value under named label or (if undefined)
+the value under path itself
+
+=cut
+
 sub value {
     my ($self, $data, $label) = @_;
+    $label //= '_';
     croak("No label '$label' in path '$self'")
-        if(defined($label) && !exists $self->{_labels}->{$label});
-    my $idx = defined($label)
-        ? $self->{_labels}->{$label}
-        : @{ $self->{_components} } - 1;
+        if(!exists $self->{_labels}->{$label});
+    my $idx = $self->{_labels}->{$label};
     my $value = $data;
     for my $i (1 .. $idx) {
         my $element = $self->{_components}->[$i];
