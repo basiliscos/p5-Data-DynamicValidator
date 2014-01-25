@@ -49,7 +49,7 @@ sub to_string { join('/', @{ shift->{_components} })}
 sub labels {
     my $self = shift;
     my $labels = $self->{_labels};
-    sort { $labels->{$a} <=> $labels->{$b} } keys %$labels;
+    sort { $labels->{$a} <=> $labels->{$b} } grep { $_ ne '_' } keys %$labels;
 }
 
 sub named_route {
