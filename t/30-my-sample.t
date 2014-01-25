@@ -80,8 +80,8 @@ subtest 'my-positive' => sub {
         each    => sub {
             my $f = $_->();
             shift->(
-                on      => "/service_points/*/$f/job_slots",
-                should  => sub { $_[0] && defined($_[0]->[0]) },
+                on      => "/service_points/*/`$f`/job_slots",
+                should  => sub { defined($_[0]) && $_[0] > 0 },
                 because => "at least 1 service point should be defined for feature '$f'",
             )
         }

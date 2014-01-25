@@ -23,7 +23,16 @@ sub new {
 
 sub _build_components {
     my ($self, $path) = @_;
-    my @elements = split('/', $path);
+
+    # handle escaped path components
+    $_ = $path;
+    # substitute all '/'-symbols to "`" and strip
+    # surrounding(wraping) ` 
+    s[`(.*?\/.*?)`][my $x=$1;$x=~ tr{/}{`};$x]ge;
+    my @elements = split '/';
+    for(@elements) {
+        tr {`}{/}; # roll back slashes again
+    }
     for my $i (0..@elements-1) {
         my @parts = split(':', $elements[$i]);
         if (@parts > 1) {
