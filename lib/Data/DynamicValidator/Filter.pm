@@ -29,7 +29,6 @@ sub _prepare {
     my %environment;
     my $c = $self->{_condition};
     my $type = ref($data);
-    # substitution phase
     if ($c =~ /\bsize\b/) {
         my $value;
         if ($type eq 'HASH') {
@@ -38,24 +37,25 @@ sub _prepare {
             $value = sub { scalar @$data };
         }
         if ($value) {
-            $c =~ s/\b(size)\b/\$$1/;
             my $val = $value->();
             $environment{'$size'} = \$val;
         }
     }
     if ($c =~ /\bvalue\b/) {
-        $c =~ s/\b(value)\b/\$$1/;
         $environment{'$value'} = \$data if(defined($data));
     }
     if ($c =~ /\bindex\b/ && ref($context) eq 'HASH'
         && defined($context->{index}) ) {
-        $c =~ s/\b(index)\b/\$$1/;
         $environment{'$index'} = \$context->{index};
     }
     if ($c =~ /\bkey\b/ && ref($context) eq 'HASH'
         && defined($context->{key}) ) {
-        $c =~ s/\b(key)\b/\$$1/;
         $environment{'$key'} = \$context->{key};
+    }
+    # substitute to environment values in condition
+    for (keys %environment) {
+        s/^\$//;
+        $c =~ s/\b($_)\b/\$$1/;
     }
     return ($c, \%environment);
 }
