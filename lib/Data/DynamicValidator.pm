@@ -156,30 +156,31 @@ sub expand_routes {
             # no futher examination if current value is undefined
             last unless defined($current);
             next if($element eq '');
+            my $filter;
+            ($element, $filter) = _filter($element);
+            my $type = ref($current);
             my $generator;
-            if (ref($current) eq 'HASH' && exists $current->{$element}) {
-                $current = $current->{$element};
-                next;
-            }
-            elsif (ref($current) eq 'HASH' && $element eq '*') {
-                my @keys = keys %$current;
-                my $idx = 0;
-                $generator = sub {
-                    return $keys[$idx++] if($idx < @keys);
-                    return undef;
-                };
-            }
-            elsif (ref($current) eq 'ARRAY' && looks_like_number($element)
+            my $advancer;
+            if ($element eq '*') {
+                if ($type eq 'HASH') {
+                    my @keys = keys %$current;
+                    my $idx = 0;
+                    $generator = sub {
+                        return $keys[$idx++] if($idx < @keys);
+                        return undef;
+                    };
+                } elsif ($type eq 'ARRAY') {
+                    my $idx = 0;
+                    $generator = sub {
+                        return $idx++ if($idx < @$current);
+                        return undef;
+                    };
+                }
+            }elsif ($type eq 'HASH' && exists $current->{$element}) {
+                $advancer = sub { $current->{$element} };
+            }elsif ($type eq 'ARRAY' && looks_like_number($element) 
                 && $element < @$current) {
-                $current = $current->[$element];
-                next;
-            }
-            elsif (ref($current) eq 'ARRAY' && $element eq '*') {
-                my $idx = 0;
-                $generator = sub {
-                    return $idx++ if($idx < @$current);
-                    return undef;
-                };
+                $advancer = sub { $current->[$element] };
             }
             if ($generator) {
                 while ( defined( my $new_element = $generator->()) ) {
@@ -189,6 +190,10 @@ sub expand_routes {
                 }
                 $current = undef;
                 last;
+            }
+            if ($advancer) {
+                $current = $advancer->();
+                next;
             }
             # the current element isn't hash nor array
             # we can't traverse further, because there is more
@@ -200,6 +205,27 @@ sub expand_routes {
             if(defined $current);
     }
     return [ sort @$result ];
+}
+
+sub _filter {
+    my $element = shift;
+    my $filter;
+    my $condition_re = qr/(?<cond>\[.+\])/;
+    my @parts = split /(?=$condition_re)/, $element, 2;
+    if (@parts == 1) {
+        $filter = sub { 1 }; # always true
+    } else {
+        $element = $parts[0];
+        my $condition;
+        $condition = $+{cond} if($parts[1] =~ $condition_re);
+        $filter = sub {
+            my $data = shift;
+            warn "--  checking if data $data matches to condition $condition \n"
+                if(DEBUG);
+            return 1;
+        };
+    }
+    return ($element, $filter);
 }
 
 sub apply {
