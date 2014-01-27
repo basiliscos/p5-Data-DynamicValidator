@@ -94,7 +94,7 @@ subtest 'my-positive' => sub {
         each    => sub {
             my ($sp, $f);
             shift->(
-                on      => "/features/`$f`",
+                on      => "/features/`*[value eq '$f']`",
                 should  => sub { 1 },
                 because => "Feature '$f' of service point '$sp' should be decrlared in top-level features list",
             )

@@ -14,7 +14,7 @@ subtest 'route-application' => sub {
     ($r, $values) = validator($data)->apply('/listen/*' => sub { @_ > 2 });
     ok !$r, "simple path appliaction passed with false condition";
     ($r, $values) = validator($data)->apply('/ABC/*' => sub { @_ == 0; });
-    ok $r, "void path appliaction with positve condition";
+    ok !$r, "void path appliaction with positve condition matches nothing";
     ($r, $values) = validator($data)->apply('/ABC/*' => sub { @_ > 0 });
     ok !$r, "void path appliaction with false condition";
 };
@@ -40,6 +40,16 @@ subtest 'simple-error' => sub {
     ok !$v->is_valid, 'failed by should rule';
     is @{ $v->errors }, 1, "got exactly 1 error";
     is $v->errors->[0]->reason, 'I want it fails', 'got error reason';
+};
+
+subtest 'selects-nothing-should-fail' => sub {
+    my $errors = validator({ a => 2 })->(
+        on      => '/b',
+        should  => sub { 1; }, # should not matter
+        because => 'b should present',
+    )->errors;
+    is @$errors, 1;
+    like $errors->[0], qr/b should present/;
 };
 
 sub test_validator($$@) {

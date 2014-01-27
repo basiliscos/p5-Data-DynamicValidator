@@ -244,7 +244,8 @@ sub _filter {
 sub apply {
     my ($self, $on, $should) = @_;
     my $selection_results = $self->select($on);
-    my $result = $should->( @{ $selection_results->{values} } );
+    my $values = $selection_results->{values};
+    my $result = $values && @$values && $should->( @$values );
     return ($result, $selection_results);
 };
 
