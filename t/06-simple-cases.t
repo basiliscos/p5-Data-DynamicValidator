@@ -19,6 +19,15 @@ subtest 'route-application' => sub {
     ok !$r, "void path appliaction with false condition";
 };
 
+subtest 'undef-value-in-hash' => sub {
+    my ($r, $values) =  validator({x => undef})->apply('/x' => sub { 1 });
+    ok $r;
+    is @{ $values->{routes} }, 1;
+    is $values->{routes}->[0], "/x";
+    is @{ $values->{values} }, 1;
+    is $values->{values}->[0], undef, "undef is valid value";
+};
+
 subtest 'simple-error' => sub {
     my $data = { listen => [3000, 3001], };
     my $v;

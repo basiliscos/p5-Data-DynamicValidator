@@ -11,6 +11,7 @@ use Scalar::Util qw/looks_like_number/;
 use Storable qw(dclone);
 
 use aliased qw/Data::DynamicValidator::Error/;
+use aliased qw/Data::DynamicValidator::Filter/;
 use aliased qw/Data::DynamicValidator::Label/;
 use aliased qw/Data::DynamicValidator::Path/;
 
@@ -151,7 +152,10 @@ sub expand_routes {
         my $route = shift(@routes);
         my $current = $self->{_data};
         my $elements = $route->components;
-        for my $i (0 .. @$elements-1 ) {
+        my $i;
+        my $can_be_accessed = 0;
+        for ($i = 0; $i < @$elements; $i++) {
+            $can_be_accessed = 0;
             my $element = $elements->[$i];
             # no futher examination if current value is undefined
             last unless defined($current);
@@ -166,7 +170,11 @@ sub expand_routes {
                     my @keys = keys %$current;
                     my $idx = 0;
                     $generator = sub {
-                        return $keys[$idx++] if($idx < @keys);
+                        while($idx < @keys) {
+                            my $key = $keys[$idx++];
+                            my $match = $filter->($current->{$key}, {key => $key});
+                            return $key if($match);
+                        }
                         return undef;
                     };
                 } elsif ($type eq 'ARRAY') {
@@ -178,8 +186,12 @@ sub expand_routes {
                 }
             }elsif ($type eq 'HASH' && exists $current->{$element}) {
                 $advancer = sub { $current->{$element} };
-            }elsif ($type eq 'ARRAY' && looks_like_number($element) 
-                && $element < @$current) {
+            }elsif ($type eq 'ARRAY' && looks_like_number($element)
+                && (
+                    ($element >= 0 && $element < @$current)
+                    || ($element < 0 && abs($element) <= @$current)
+                   )
+                ){
                 $advancer = sub { $current->[$element] };
             }
             if ($generator) {
@@ -193,16 +205,19 @@ sub expand_routes {
             }
             if ($advancer) {
                 $current = $advancer->();
+                $can_be_accessed = 1;
                 next;
             }
             # the current element isn't hash nor array
             # we can't traverse further, because there is more
             # else current path
             $current = undef;
+            $can_be_accessed = 0;
         }
-        warn "-- Expanded route : $route \n" if(DEBUG && defined($current));
-        push @$result, $route
-            if(defined $current);
+        my $do_expansion = defined $current
+            || ($can_be_accessed && $i == @$elements);
+        warn "-- Expanded route : $route \n" if(DEBUG && $do_expansion);
+        push @$result, $route if($do_expansion);
     }
     return [ sort @$result ];
 }
@@ -210,20 +225,14 @@ sub expand_routes {
 sub _filter {
     my $element = shift;
     my $filter;
-    my $condition_re = qr/(?<cond>\[.+\])/;
+    my $condition_re = qr/\[(?<cond>.+)\]/;
     my @parts = split /(?=$condition_re)/, $element, 2;
     if (@parts == 1) {
         $filter = sub { 1 }; # always true
     } else {
         $element = $parts[0];
-        my $condition;
-        $condition = $+{cond} if($parts[1] =~ $condition_re);
-        $filter = sub {
-            my $data = shift;
-            warn "--  checking if data $data matches to condition $condition \n"
-                if(DEBUG);
-            return 1;
-        };
+        my $condition = $parts[1];
+        $filter = Filter->new($condition);
     }
     return ($element, $filter);
 }
