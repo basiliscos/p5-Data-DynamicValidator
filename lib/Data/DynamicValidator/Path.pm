@@ -1,4 +1,5 @@
 package Data::DynamicValidator::Path;
+# ABSTRACT: Class represents "splitted" to labelled componets path.
 
 use strict;
 use warnings;
