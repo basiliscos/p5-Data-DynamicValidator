@@ -15,6 +15,7 @@ my $data = {
     c2 => 5,
     "dc/1" => [],
     d => undef,
+    e => [ qw/e1 e2 z/ ],
 };
 
 my ($r, $values);
@@ -38,6 +39,10 @@ ok $r;
 is @{ $values->{routes} }, 1 , "1 route selected (/c)";
 is $values->{routes}->[0]->to_string, '/c', "it is /c";
 is $values->{values}->[0], "bbb", "/c value is 'bbb'";
+
+($r, $values) = validator($data)->apply('/e/`*[value =~ /^e/]`' => sub { 1 });
+ok $r;
+is @{ $values->{routes} }, 2 , "2 route selected (/e/{e1,e2})";
 
 
 done_testing;

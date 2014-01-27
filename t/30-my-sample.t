@@ -95,7 +95,7 @@ subtest 'my-positive' => sub {
             my ($sp, $f);
             shift->(
                 on      => "/features/`$f`",
-                should  => sub { defined($_[0]) },
+                should  => sub { 1 },
                 because => "Feature '$f' of service point '$sp' should be decrlared in top-level features list",
             )
         },

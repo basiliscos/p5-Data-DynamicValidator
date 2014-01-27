@@ -180,7 +180,11 @@ sub expand_routes {
                 } elsif ($type eq 'ARRAY') {
                     my $idx = 0;
                     $generator = sub {
-                        return $idx++ if($idx < @$current);
+                        while($idx < @$current) {
+                            my $index = $idx++;
+                            my $match = $filter->($current->[$index], {index => $index});
+                            return $index if($match);
+                        }
                         return undef;
                     };
                 }
