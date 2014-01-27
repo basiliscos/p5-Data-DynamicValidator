@@ -11,6 +11,8 @@ my $data = {
         { b => 4},
         undef,
     ],
+    c => "bbb",
+    c2 => 5,
     "dc/1" => [],
     d => undef,
 };
@@ -21,15 +23,21 @@ my ($r, $values);
 ok $r;
 is @{ $values->{routes} }, 1 , "1 route selected (/d)";
 is $values->{routes}->[0]->to_string, '/d', "it is /d";
-is $values->{values}->[0], undef, "/d values is undef";
+is $values->{values}->[0], undef, "/d value is undef";
 
 ($r, $values) = validator($data)->apply('/`*[key =~ /d/]`' => sub { 1 });
 ok $r;
 is @{ $values->{routes} }, 2 , "1 route selected (/d and /dc/1)";
 is $values->{routes}->[0]->to_string, '/d', "it is /d";
 is $values->{routes}->[1]->to_string, '/dc/1', "it is /d/dc/1";
-is $values->{values}->[0], undef, "/d values is undef";
+is $values->{values}->[0], undef, "/d value is undef";
 is_deeply $values->{values}->[1] , [], "/dc/1 refers to empty array";
+
+($r, $values) = validator($data)->apply('/*[value eq "bbb"]' => sub { 1 });
+ok $r;
+is @{ $values->{routes} }, 1 , "1 route selected (/c)";
+is $values->{routes}->[0]->to_string, '/c', "it is /c";
+is $values->{values}->[0], "bbb", "/c value is 'bbb'";
 
 
 done_testing;
