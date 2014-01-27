@@ -8,6 +8,7 @@ README
 dist.ini
 lib/Data/DynamicValidator.pm
 lib/Data/DynamicValidator/Error.pm
+lib/Data/DynamicValidator/Filter.pm
 lib/Data/DynamicValidator/Label.pm
 lib/Data/DynamicValidator/Path.pm
 t/000-compile.t
@@ -15,4 +16,6 @@ t/05-selector.t
 t/06-simple-cases.t
 t/07-labels.t
 t/08-escaping.t
+t/09-filter.t
+t/10-filtering.t
 t/30-my-sample.t

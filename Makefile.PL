@@ -21,7 +21,9 @@ my %WriteMakefileArgs = (
   "NAME" => "Data::DynamicValidator",
   "PREREQ_PM" => {
     "Devel::LexAlias" => "0.05",
+    "Eval::Closure" => "0.11",
     "PadWalker" => "1.98",
+    "Try::Tiny" => "0.18",
     "aliased" => "0.31"
   },
   "TEST_REQUIRES" => {
@@ -41,6 +43,7 @@ my %WriteMakefileArgs = (
 
 my %FallbackPrereqs = (
   "Devel::LexAlias" => "0.05",
+  "Eval::Closure" => "0.11",
   "File::Spec" => 0,
   "File::Temp" => 0,
   "IO::Handle" => 0,
@@ -48,6 +51,7 @@ my %FallbackPrereqs = (
   "PadWalker" => "1.98",
   "Test::More" => "0.98",
   "Test::Warnings" => "0.013",
+  "Try::Tiny" => "0.18",
   "aliased" => "0.31"
 );
 

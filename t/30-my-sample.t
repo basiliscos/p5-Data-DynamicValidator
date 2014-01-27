@@ -73,7 +73,8 @@ my $cfg = {
 
 
 subtest 'my-positive' => sub {
-    my $errors = validator($cfg)->(
+    my $errors = validator($cfg)
+        ->(
         on      => '/features/*',
         should  => sub { @_ > 0 },
         because => "at least one feature should be defined",
@@ -85,6 +86,19 @@ subtest 'my-positive' => sub {
                 because => "at least 1 service point should be defined for feature '$f'",
             )
         }
+    )
+        ->(
+        on      => '/service_points/sp:*/f:*',
+        should  => sub { @_ > 0 },
+        because => "at least one feature should be defined",
+        each    => sub {
+            my ($sp, $f);
+            shift->(
+                on      => "/features/`$f`",
+                should  => sub { 1 },
+                because => "Feature '$f' of service point '$sp' should be decrlared in top-level features list",
+            )
+        },
     )->errors;
     is_deeply $errors, [], "no errors on valid data";
 };

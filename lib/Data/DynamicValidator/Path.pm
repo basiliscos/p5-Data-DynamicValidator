@@ -105,7 +105,10 @@ sub value {
         }
         croak "I don't know how to get element#$i ($element) at $self";
     }
-    warn "-- value for $self is $value\n" if DEBUG;
+    if (DEBUG) {
+        warn "-- value for $self is "
+            . (defined($value)? $value : 'undefined') . "\n"
+    }
     return $value;
 }
 
