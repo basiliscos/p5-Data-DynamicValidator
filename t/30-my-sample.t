@@ -35,9 +35,6 @@ my $cfg = {
         },
 
     },
-    dispatcher => {
-    	    maximal_input_size => 4096,
-    },
 
     mojolicious => {
     	hypnotoad => {
@@ -47,30 +44,6 @@ my $cfg = {
             ],
         },
     },
-
-    redis => {
-        host => '127.0.0.1',
-        port => 6379,
-    },
-
-    finalizer => {
-        job_ttl => 3600,
-    },
-
-    queue_processor => {
-        sp_ping_timeout             => 1,
-        sp_idle                     => 5,
-        sp_max_ping_failures        => 10,
-        sp_max_unknown_failures     => 1,
-        sp_request_timeout          => 5,
-        client_callback_timeout     => 1,
-        host                        => '127.0.0.1',
-        port                        => 5000,
-    },
-    daemon => {
-       child_max_wait => 10,
-    },
-
 };
 
 
@@ -108,6 +81,14 @@ subtest 'my-positive' => sub {
                 because => "Feature '$f' of service point '$sp' should be decrlared in top-level features list",
             )
         },
+    )->(
+        on      => '/mojolicious/hypnotoad/pid_file',
+        should  => sub { @_ == 1 },
+        because => "hypnotoad pid_file should be defined",
+    )->(
+        on      => '/mojolicious/hypnotoad/listen/*',
+        should  => sub { @_ > 0 },
+        because => "hypnotoad listening interfaces defined",
     )->errors;
     is_deeply $errors, [], "no errors on valid data";
 };
