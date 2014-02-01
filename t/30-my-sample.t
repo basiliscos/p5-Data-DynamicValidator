@@ -88,6 +88,15 @@ subtest 'my-positive' => sub {
             )
         }
     )->(
+        on      => '/service_points/sp:*',
+        should  => sub { @_ > 0 },
+        because => "at least one service point should be defined",
+        each    => sub {
+            my $sp;
+            shift->report_error("SP '$sp' isn't resolvable")
+                unless gethost($sp);
+        }
+    )->(
         on      => '/service_points/sp:*/f:*',
         should  => sub { @_ > 0 },
         because => "at least one feature under service point should be defined",
@@ -99,15 +108,6 @@ subtest 'my-positive' => sub {
                 because => "Feature '$f' of service point '$sp' should be decrlared in top-level features list",
             )
         },
-    )->(
-        on      => '/service_points/sp:*',
-        should  => sub { @_ > 0 },
-        because => "at least one service point should be defined",
-        each    => sub {
-            my $sp;
-            shift->report_error("SP '$sp' isn't resolvable")
-                unless gethost($sp);
-        }
     )->errors;
     is_deeply $errors, [], "no errors on valid data";
 };
