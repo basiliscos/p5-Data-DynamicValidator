@@ -229,14 +229,14 @@ sub expand_routes {
 sub _filter {
     my $element = shift;
     my $filter;
-    my $condition_re = qr/\[(?<cond>.+)\]/;
-    my @parts = split /(?=$condition_re)/, $element, 2;
-    if (@parts == 1) {
-        $filter = sub { 1 }; # always true
-    } else {
+    my $condition_re = qr/(.+?)(\[(.+)\])/;
+    my @parts = $element =~ /$condition_re/;
+    if (@parts == 3 && defined($parts[2])) {
         $element = $parts[0];
-        my $condition = $parts[1];
+        my $condition = $parts[2];
         $filter = Filter->new($condition);
+    } else {
+        $filter = sub { 1 }; # always true
     }
     return ($element, $filter);
 }

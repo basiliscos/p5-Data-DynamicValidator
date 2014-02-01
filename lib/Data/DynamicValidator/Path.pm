@@ -26,7 +26,7 @@ sub _build_components {
     $_ = $path;
     # substitute all '/'-symbols to "`" and strip
     # surrounding(wraping) ` 
-    s[`(.*?\/.*?)`][my $x=$1;$x=~ tr{/}{`};$x]ge;
+    s[`(.+?)`][my $x=$1;$x=~ tr{/}{`};$x]ge;
     my @elements = split '/';
     for(@elements) {
         tr {`}{/}; # roll back slashes again
