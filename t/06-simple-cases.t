@@ -122,4 +122,20 @@ subtest 'simple-1-children-positive' => sub {
     ok $v->is_valid, "valid on valid and simple 'each' test";
 };
 
+subtest 'simple-custom-error' => sub {
+    my $data = ["a"];
+    my $errors = validator($data)->(
+        on      => '/var:0',
+        should  => sub { 1 },
+        because => '...',
+        each    => sub {
+            my $var;
+            my $value = $var->();
+            shift->report_error("custom fail on value '$value'");
+        }
+    )->errors;
+    is @$errors, 1, "got exactly 1 error";
+    is $errors->[0]->reason, "custom fail on value 'a'";
+};
+
 done_testing;
