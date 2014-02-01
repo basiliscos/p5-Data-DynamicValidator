@@ -25,4 +25,10 @@ subtest 'simple-escaping' => sub {
     is "$p1", "$p2";
 };
 
+subtest 'escape-in-expression' => sub {
+    my $paths = validator([10,20,30])->expand_routes('/`*[index == 2]`');
+    is @$paths, 1;
+    is $paths->[0], "/2";
+};
+
 done_testing;

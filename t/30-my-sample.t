@@ -4,7 +4,9 @@ use warnings;
 use Test::More;
 use Test::Warnings;
 
+use List::MoreUtils qw/all/;
 use Data::DynamicValidator qw/validator/;
+use Net::hostent;
 
 my $cfg = {
 
@@ -73,8 +75,7 @@ my $cfg = {
 
 
 subtest 'my-positive' => sub {
-    my $errors = validator($cfg)
-        ->(
+    my $errors = validator($cfg)->(
         on      => '/features/*',
         should  => sub { @_ > 0 },
         because => "at least one feature should be defined",
@@ -86,11 +87,10 @@ subtest 'my-positive' => sub {
                 because => "at least 1 service point should be defined for feature '$f'",
             )
         }
-    )
-        ->(
+    )->(
         on      => '/service_points/sp:*/f:*',
         should  => sub { @_ > 0 },
-        because => "at least one feature should be defined",
+        because => "at least one feature under service point should be defined",
         each    => sub {
             my ($sp, $f);
             shift->(
@@ -99,6 +99,15 @@ subtest 'my-positive' => sub {
                 because => "Feature '$f' of service point '$sp' should be decrlared in top-level features list",
             )
         },
+    )->(
+        on      => '/service_points/sp:*',
+        should  => sub { @_ > 0 },
+        because => "at least one service point should be defined",
+        each    => sub {
+            my $sp;
+            shift->report_error("SP '$sp' isn't resolvable")
+                unless gethost($sp);
+        }
     )->errors;
     is_deeply $errors, [], "no errors on valid data";
 };

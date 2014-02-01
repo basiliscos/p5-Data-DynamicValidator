@@ -63,7 +63,7 @@ sub validate {
     if ( !@$errors ) {
         my $success;
         ($success, $selection_results) = $self->apply($on, $should);
-        push @$errors, Error->new($because, $on)
+        $self->report_error($because, $on)
             unless $success;
     }
     # OK, now going to child rules if there is no errors
@@ -73,6 +73,14 @@ sub validate {
     }
 
     return $self;
+}
+
+sub report_error {
+    my ($self, $reason, $path) = @_;
+    $path //= $self->{_current_path};
+    croak "Can't report error unless path is undefined"
+        unless defined $path;
+    push @{ $self->{_errors} }, Error->new($reason, $path);
 }
 
 sub _validate_children {
@@ -94,6 +102,7 @@ sub _validate_children {
             lexalias($each, $var, \$label_obj);
         }
         # call
+        $self->{_current_path} = $route;
         $each->($self, local $_ = Label->new('_', $route, $data));
         last if(@$errors);
     }
@@ -200,14 +209,14 @@ sub expand_routes {
 sub _filter {
     my $element = shift;
     my $filter;
-    my $condition_re = qr/\[(?<cond>.+)\]/;
-    my @parts = split /(?=$condition_re)/, $element, 2;
-    if (@parts == 1) {
-        $filter = sub { 1 }; # always true
-    } else {
+    my $condition_re = qr/(.+?)(\[(.+)\])/;
+    my @parts = $element =~ /$condition_re/;
+    if (@parts == 3 && defined($parts[2])) {
         $element = $parts[0];
-        my $condition = $parts[1];
+        my $condition = $parts[2];
         $filter = Filter->new($condition);
+    } else {
+        $filter = sub { 1 }; # always true
     }
     return ($element, $filter);
 }

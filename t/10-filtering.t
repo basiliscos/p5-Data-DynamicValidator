@@ -49,7 +49,26 @@ subtest 'filter-in-arrays' => sub {
     ($r, $values) = validator($data)->apply('/e/`*[value =~ /^e/]`' => sub { 1 });
     ok $r;
     is @{ $values->{routes} }, 2 , "2 route selected (/e/{e1,e2})";
+    is $values->{values}->[0], "e1";
+    is $values->{values}->[1], "e2";
+
+    ($r, $values) = validator($data)->apply('/e/`*[index > 0]`' => sub { 1 });
+    ok $r;
+    is @{ $values->{routes} }, 2 , "2 route selected (/e/{e2,z})";
+    is $values->{values}->[0], "e2";
+    is $values->{values}->[1], "z";
+
+    ($r, $values) = validator($data)->apply('/`*[size == 2]`' => sub { 1 });
+    ok $r;
+    is_deeply $values->{values}->[0], [ {b => 4}, undef, ];
 };
 
+subtest 'double-filter' => sub {
+    my ($r, $values);
+
+    ($r, $values) = validator($data)->apply('/`*[size == 2]`/*/*[key eq "b"]' => sub { 1 });
+    ok $r;
+    is $values->{values}->[0], 4;
+};
 
 done_testing;
