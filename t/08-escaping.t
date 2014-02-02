@@ -7,6 +7,12 @@ use Test::Warnings;
 use Data::DynamicValidator qw/validator/;
 use aliased qw/Data::DynamicValidator::Path/;
 
+subtest 'escaped-in-to_string' => sub {
+    my $ps = '/`a/b`/`c/d`/0';
+    my $p1 = Path->new($ps);
+    is "$p1", $ps;
+};
+
 subtest 'escape-in-path-object' => sub {
     my $p1 = Path->new('/v1:`a/b`/v2:`c/d`/v3:0');
     is_deeply $p1->components, ['','a/b', 'c/d', 0];
