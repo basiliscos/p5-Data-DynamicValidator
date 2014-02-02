@@ -454,23 +454,28 @@ understandable for the person, which provides the data.
 
 =head1 DATA PATH EXPRESSIONS
 
- '/5'   # selects the 1st value in $data array
- '/abc' # selects the value in hashref under key 'abc'
+ my $data = [qw/a b c d e/];
+ '/2'   # selects the 'c' value in $data array
+ '/-1'  # selects the 'e' value in $data array
 
- '/mojolicious/hypnotoad/pid_file'
- # selects the value in
- my $data = {
+ $data = { abc => 123 };
+ '/abc' # selects the '123' value in hashref under key 'abc'
+
+ $data = {
    mojolicious => {
      hypnotoad => {
        pid_file => '/tmp/hypnotoad-ng.pid',
      }
    }
  };
+ '/mojolicious/hypnotoad/pid_file' # point to pid_file 
 
- '/abc/*' # selects any values under 'abc' key: all values
-          # of array, it 'abc' points to array, all values
-          # of the hashref, if abc points arrayref
-          # or the string/number value otherwise
+ $data = {abc => [qw/a b/]};   # 1
+ $data = {abc => { c => 'd'}}; # 2
+ $data = {abc => 7};           # 3
+ '/abc/*' # selects 'a' and 'b' in 1st case
+          # the 'd' in 2nd case
+          # the number 7 in 3rd case
 
 =head1 RESOURCES
 
