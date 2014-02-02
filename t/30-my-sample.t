@@ -12,8 +12,8 @@ my $cfg = {
 
     features => [
         "a/f",
-        "pdftoolbox/preflight",
-        "pdftoolbox/splitpdf",
+        "application/feature1",
+        "application/feature2",
     ],
 
     service_points => {
@@ -21,15 +21,15 @@ my $cfg = {
             "a/f" => {
                 job_slots => 3,
             },
-            "pdftoolbox/preflight" => {
+            "application/feature1" => {
                 job_slots => 5,
             },
-            "pdftoolbox/splitpdf" => {
+            "application/feature2" => {
                 job_slots => 5,
             },
         },
         "127.0.0.1" => {
-            "pdftoolbox/splitpdf" => {
+            "application/feature2" => {
                 job_slots => 5,
             },
         },

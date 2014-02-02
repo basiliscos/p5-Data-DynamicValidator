@@ -27,6 +27,82 @@ our @EXPORT_OK = qw/validator/;
 
 use constant DEBUG => $ENV{DATA_DYNAMICVALIDATOR_DEBUG} || 0;
 
+=head1 SYNOPSIS
+
+ my $my_complex_config = {
+    features => [
+        "a/f",
+        "application/feature1",
+        "application/feature2",
+    ],
+    service_points => {
+        localhost => {
+            "a/f" => { job_slots => 3, },
+            "application/feature1" => { job_slots => 5 },
+            "application/feature2" => { job_slots => 5 },
+        },
+        "127.0.0.1" => {
+            "application/feature2" => { job_slots => 5 },
+        },
+    },
+    mojolicious => {
+    	hypnotoad => {
+            pid_file => '/tmp/hypnotoad-ng.pid',
+            listen  => [ 'http://localhost:3000' ],
+        },
+    },
+ };
+
+ use Data::DynamicValidator qw/validator/;
+
+ my $errors = validator($cfg)->(
+   on      => '/features/*',
+   should  => sub { @_ > 0 },
+   because => "at least one feature should be defined",
+   each    => sub {
+     my $f = $_->();
+     shift->(
+       on      => "/service_points/*/`$f`/job_slots",
+       should  => sub { defined($_[0]) && $_[0] > 0 },
+       because => "at least 1 service point should be defined for feature '$f'",
+     )
+   }
+ )->(
+   on      => '/service_points/sp:*',
+   should  => sub { @_ > 0 },
+   because => "at least one service point should be defined",
+   each    => sub {
+     my $sp;
+     shift->report_error("SP '$sp' isn't resolvable")
+       unless gethost($sp);
+   }
+ )->(
+  on      => '/service_points/sp:*/f:*',
+  should  => sub { @_ > 0 },
+  because => "at least one feature under service point should be defined",
+  each    => sub {
+    my ($sp, $f);
+    shift->(
+      on      => "/features/`*[value eq '$f']`",
+      should  => sub { 1 },
+      because => "Feature '$f' of service point '$sp' should be decrlared in top-level features list",
+    )
+  },
+ )->(
+   on      => '/mojolicious/hypnotoad/pid_file',
+   should  => sub { @_ == 1 },
+   because => "hypnotoad pid_file should be defined",
+ )->(
+   on      => '/mojolicious/hypnotoad/listen/*',
+   should  => sub { @_ > 0 },
+   because => "hypnotoad listening interfaces defined",
+ )->errors;
+
+ print "all OK\n"
+  unless(@$errors);
+
+=cut
+
 =func validator
 
 The enter point for DynamicValidator.
