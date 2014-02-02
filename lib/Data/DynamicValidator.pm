@@ -468,7 +468,11 @@ understandable for the person, which provides the data.
      }
    }
  };
- '/mojolicious/hypnotoad/pid_file' # point to pid_file 
+ '/mojolicious/hypnotoad/pid_file' # point to pid_file
+
+ # Escaping capabilities sample
+ $data => { "a/b" => { c => 5 } }
+ '/`a/b`/c' # selects 5
 
  $data = {abc => [qw/a b/]};   # 1
  $data = {abc => { c => 'd'}}; # 2
@@ -476,6 +480,13 @@ understandable for the person, which provides the data.
  '/abc/*' # selects 'a' and 'b' in 1st case
           # the 'd' in 2nd case
           # the number 7 in 3rd case
+
+ # Filtering capabilities samples:
+
+ '/abc/*[size == 5]'   # filter array/hash by size
+ '/abc/*[value eq "z"] # filter array/hash by value equality
+ '/abc/*[index > 5]    # finter array by index
+ '/abc/*[key =~ /def/] # finter hash by key
 
 =head1 RESOURCES
 
