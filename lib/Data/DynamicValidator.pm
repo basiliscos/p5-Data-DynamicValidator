@@ -1,5 +1,5 @@
 package Data::DynamicValidator;
-#ABSTRACT: XPath-like and Perl union for flexible perl data structures validation
+#ABSTRACT: JPointer-like and Perl union for flexible perl data structures validation
 
 use strict;
 use warnings;
@@ -42,6 +42,11 @@ sub new {
 }
 
 =method validate
+
+Performs validation based on 'on', 'should', 'because' and optional 'each'
+parameters. Returns the validator itself ($self), to allow further 'chain'
+invocations. The validation will not be performed, if some errors already
+have been detected.
 
 =cut
 
@@ -111,13 +116,13 @@ sub _validate_children {
 
 =method select
 
-Takes xpath-like expandable expression and returns hashref of path with corresponding
+Takes path-like expandable expression and returns hashref of path with corresponding
 values from data, e.g.
 
  validator({ a => [5,'z']})->select('/a/*');
  # will return
  # {
- #   routes => ['/a/0', '/a/1']  => 5,
+ #   routes => ['/a/0', '/a/1'],
  #   values => [5, z],
  # }
 
@@ -250,6 +255,17 @@ sub _filter {
     return ($element, $filter);
 }
 
+=method apply
+
+Takes the expandable expression and validation closure, then
+expands it, and applies the closure for every data piese,
+obtainted from expansion.
+
+Returns the list of success validation mark and the hash
+of details (obtained via select).
+
+=cut
+
 sub apply {
     my ($self, $on, $should) = @_;
     my $selection_results = $self->select($on);
@@ -258,7 +274,20 @@ sub apply {
     return ($result, $selection_results);
 };
 
+=method is_valid
+
+Checks, weather validator already has errors
+
+=cut
+
 sub is_valid { @{ $_[0]->{_errors} } == 0; }
+
+
+=method errors
+
+Returns internal array of errors
+
+=cut
 
 sub errors { $_[0]->{_errors} }
 
