@@ -414,6 +414,9 @@ check them on applicaiton startup is B<wrong>, because of sudden
 unexpected runtime errors can occur, which not-so-pleasent to detect.
 Write the code, that does full exhaustive checks, is B<boring>.
 
+This module offers to use DLS, that makes data validation funny yet
+understandable for the person, which provides the data.
+
 =head1 AUTHOR
 
 Ivan Baidakou <dmol@gmx.com>
