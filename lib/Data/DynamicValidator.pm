@@ -27,6 +27,18 @@ our @EXPORT_OK = qw/validator/;
 
 use constant DEBUG => $ENV{DATA_DYNAMICVALIDATOR_DEBUG} || 0;
 
+=func validator
+
+The enter point for DynamicValidator.
+
+ my $errors = validator(...)->(
+   on => "...",
+   should => sub { ... },
+   because => "...",
+ )->errors;
+
+=cut 
+
 sub validator {
     return Data::DynamicValidator->new(@_);
 }
@@ -80,6 +92,25 @@ sub validate {
     return $self;
 }
 
+=method report_error
+
+The method is used for custom errors reporing. It is mainly usable in 'each'
+closure.
+
+ validator({ ports => [1000, 2000, 3000] })->(
+   on      => '/ports/port:*',
+   should  => sub { @_ > 0 },
+   because => "At least one listening port should be defined",
+   each    => sub {
+     my $port;
+     my $port_value = $port->();
+     shift->report_error("Port value $port_value isn't acceptable, because < 1000")
+       if($port_value < 1000);
+   }
+ );
+
+=cut
+
 sub report_error {
     my ($self, $reason, $path) = @_;
     $path //= $self->{_current_path};
@@ -87,6 +118,25 @@ sub report_error {
         unless defined $path;
     push @{ $self->{_errors} }, Error->new($reason, $path);
 }
+
+=method is_valid
+
+Checks, weather validator already has errors
+
+=cut
+
+sub is_valid { @{ $_[0]->{_errors} } == 0; }
+
+
+=method errors
+
+Returns internal array of errors
+
+=cut
+
+sub errors { $_[0]->{_errors} }
+
+### private/implementation methods
 
 sub _validate_children {
     my ($self, $selection_results, $each) = @_;
@@ -261,22 +311,5 @@ sub _apply {
     my $result = $values && @$values && $should->( @$values );
     return ($result, $selection_results);
 };
-
-=method is_valid
-
-Checks, weather validator already has errors
-
-=cut
-
-sub is_valid { @{ $_[0]->{_errors} } == 0; }
-
-
-=method errors
-
-Returns internal array of errors
-
-=cut
-
-sub errors { $_[0]->{_errors} }
 
 1;

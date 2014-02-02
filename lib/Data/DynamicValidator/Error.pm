@@ -23,7 +23,20 @@ Stringizes to reason by default
 
 sub to_string{ $_[0]->{_reason} };
 
+=method reason
+
+Returns the human-readable error description
+
+=cut
+
 sub reason { $_[0]->{_reason} };
+
+
+=method path
+
+Returns the path object, pointing to the error location
+
+=cut
 
 sub path { $_[0]->{_path} }
 
