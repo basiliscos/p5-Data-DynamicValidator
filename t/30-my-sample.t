@@ -4,9 +4,10 @@ use warnings;
 use Test::More;
 use Test::Warnings;
 
-use List::MoreUtils qw/all/;
 use Data::DynamicValidator qw/validator/;
+use List::MoreUtils qw/all any/;
 use Net::hostent;
+use Scalar::Util qw/looks_like_number/;
 
 my $cfg = {
 
@@ -89,6 +90,28 @@ subtest 'my-positive' => sub {
         on      => '/mojolicious/hypnotoad/listen/*',
         should  => sub { @_ > 0 },
         because => "hypnotoad listening interfaces defined",
+    )->errors;
+    is_deeply $errors, [], "no errors on valid data";
+};
+
+subtest 'my-demo-test' => sub {
+    my $data = {
+        ports => [2000, 3000],
+        2000  => 'tcp',
+        3000  => 'udp',
+    };
+    my $errors = validator($data)->(
+        on      => '/ports/*[value > 1000 ]',
+        should  => sub { @_ > 0 },
+        because => 'At least one port > 1000 should be defined in "ports" section',
+        each    => sub {
+            my $port = $_->();
+            shift->(
+                on      => "/*[key eq $port]",
+                should  => sub { @_ == 1 && any { $_[0] eq $_ } (qw/tcp udp/)  },
+                because => "The port $port should be declated at top-level as tcp or udp",
+            )
+        }
     )->errors;
     is_deeply $errors, [], "no errors on valid data";
 };

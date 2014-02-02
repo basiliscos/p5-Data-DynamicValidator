@@ -1,5 +1,5 @@
 ---
-abstract: 'XPath-like and Perl union for flexible perl data structures validation'
+abstract: 'JSON pointer-like and Perl union for flexible perlish structures validation'
 author:
   - 'Ivan Baidakou <dmol@gmx.com>'
 build_requires:

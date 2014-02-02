@@ -3,7 +3,7 @@
 This archive contains the distribution Data-DynamicValidator,
 version 0.01:
 
-  XPath-like and Perl union for flexible perl data structures validation
+  JSON pointer-like and Perl union for flexible perlish structures validation
 
 This software is copyright (c) 2014 by Ivan Baidakou.
 

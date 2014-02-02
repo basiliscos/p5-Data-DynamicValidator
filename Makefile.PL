@@ -9,7 +9,7 @@ use ExtUtils::MakeMaker 6.72;
 
 
 my %WriteMakefileArgs = (
-  "ABSTRACT" => "XPath-like and Perl union for flexible perl data structures validation",
+  "ABSTRACT" => "JSON pointer-like and Perl union for flexible perlish structures validation",
   "AUTHOR" => "Ivan Baidakou <dmol\@gmx.com>",
   "BUILD_REQUIRES" => {},
   "CONFIGURE_REQUIRES" => {
