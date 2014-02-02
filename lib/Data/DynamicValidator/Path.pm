@@ -48,7 +48,11 @@ sub _build_components {
 
 sub components { shift->{_components} }
 
-sub to_string { join('/', @{ shift->{_components} })}
+sub to_string {
+    join('/',
+         map { /\// ? "`$_`" : $_ }
+         @{ shift->{_components} })
+}
 
 sub labels {
     my $self = shift;
