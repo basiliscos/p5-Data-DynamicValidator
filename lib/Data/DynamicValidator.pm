@@ -54,6 +54,7 @@ use constant DEBUG => $ENV{DATA_DYNAMICVALIDATOR_DEBUG} || 0;
  };
 
  use Data::DynamicValidator qw/validator/;
+ use Net::hostent;
 
  my $errors = validator($cfg)->(
    on      => '/features/*',
@@ -103,6 +104,179 @@ use constant DEBUG => $ENV{DATA_DYNAMICVALIDATOR_DEBUG} || 0;
 
 =cut
 
+=head1 RATIONALE
+
+There are complex data configurations, e.g. application configs. Not to
+check them on applicaiton startup is B<wrong>, because of sudden
+unexpected runtime errors can occur, which not-so-pleasent to detect.
+Write the code, that does full exhaustive checks, is B<boring>.
+
+This module offers to use DLS, that makes data validation funny yet
+understandable for the person, which provides the data.
+
+=cut
+
+
+=head1 DESCRIPTION
+
+First of all, you should create Validator instance:
+
+ use Data::DynamicValidator qw/validator/;
+
+ my $data = { ports => [2222] };
+ my $v = validator($data);
+
+Then, actually do validation:
+
+ $v->(
+   on      => '/ports/*',
+   should  => sub { @_ > 0 },
+   because => 'At least one port should be defined at "ports" section',
+ );
+
+The C<on> parameter defines the data path, via JSON-pointer like expression;
+the C<should> parameter provides the closure, which will check the values
+gathered on via pointer. If the closure returns false, then the error will
+be recorded, with description, provided by C<because> parameter.
+
+To get the results of validation, you can call:
+
+ $v->is_valid; # returns true, if there is no validation errors
+ $v->errors;   # returns array reference, consisting of the met Errors
+
+C<on>/C<should> parameters are convenient for validation of presense of
+something, but they aren't so handy in checking of B<individual> values.
+To handle that the optional C<each> pareter has been introduced.
+
+ my $data = { ports => [2222, 3333] };
+ $v->(
+   on      => '/ports/*',
+   should  => sub { @_ > 0 },
+   because => 'At least one port should be defined at "ports" section',
+   each    => sub {
+     my $port = $_->();
+     $v->report_error("All ports should be greater than 1000")
+      unless $port > 1000;
+   },
+ );
+
+So, C<report_error> could be used for custom errors reporting on current
+path or current data value. The C<$_> is the an implicit alias or B<label>
+to the last componenet of the current path, i.e. on our case the current
+path in C<each> closure will be C</ports/0> and C</ports/1>, so the C<$_>
+will be 0 and 1 respectively. To get the I<value> of the label, you should
+"invoke" it, as showed previously. A label stringizes to the last data
+path component, e.g. to "0" and "1" respectively.
+
+The C<each> closure single argrument is the validator instance itself. The
+previous example could be rewriten with explicit label like:
+
+ $v->(
+   on      => '/ports/port:*',
+   should  => sub { @_ > 0 },
+   because => 'At least one port should be defined at "ports" section',
+   each    => sub {
+     my $port;
+     my $port_value = $port->();
+     shift->report_error("All ports should be greater than 1000")
+      unless $port_value > 1000;
+   },
+ );
+
+Providing aliases for array indices may be not so handy as for keys
+of hashes. Please note, that the label C<port> was previously "declated"
+in C<on> rule, and only then "injected" into C<$port> variable in
+C<each> closure.
+
+Consider the following example:
+
+ my $data = {
+  ports => [2000, 3000],
+  2000  => 'tcp',
+  3000  => 'udp',
+ };
+
+Let's validate it. The validation rule sounds as: there is 'ports' section,
+where at least one port > 1000 should be declated, and then the same port
+should appear at top-level, and it should either 'tcp' or 'upd' type.
+
+ use List::MoreUtils qw/any/;
+
+ my $errors = validator($data)->(
+   on      => '/ports/*[value > 1000 ]',
+   should  => sub { @_ > 0 },
+   because => 'At least one port > 1000 should be defined in "ports" section',
+   each    => sub {
+     my $port = $_->();
+     shift->(
+       on      => "/*[key eq $port]",
+       should  => sub { @_ == 1 && any { $_[0] eq $_ } (qw/tcp udp/)  },
+       because => "The port $port should be declated at top-level as tcp or udp",
+      )
+   }
+  )->errors;
+
+=cut
+
+=head1 DATA PATH EXPRESSIONS
+
+ my $data = [qw/a b c d e/];
+ '/2'   # selects the 'c' value in $data array
+ '/-1'  # selects the 'e' value in $data array
+
+ $data = { abc => 123 };
+ '/abc' # selects the '123' value in hashref under key 'abc'
+
+ $data = {
+   mojolicious => {
+     hypnotoad => {
+       pid_file => '/tmp/hypnotoad-ng.pid',
+     }
+   }
+ };
+ '/mojolicious/hypnotoad/pid_file' # point to pid_file
+
+ # Escaping by back-quotes sample
+ $data => { "a/b" => { c => 5 } }
+ '/`a/b`/c' # selects 5
+
+ $data = {abc => [qw/a b/]};   # 1
+ $data = {abc => { c => 'd'}}; # 2
+ $data = {abc => 7};           # 3
+ '/abc/*' # selects 'a' and 'b' in 1st case
+          # the 'd' in 2nd case
+          # the number 7 in 3rd case
+
+ # Filtering capabilities samples:
+
+ '/abc/*[size == 5]'   # filter array/hash by size
+ '/abc/*[value eq "z"] # filter array/hash by value equality
+ '/abc/*[index > 5]    # finter array by index
+ '/abc/*[key =~ /def/] # finter hash by key
+
+=cut
+
+=head1 DEBUGGING
+
+You can set the DATA_DYNAMICVALIDATOR_DEBUG environment variable
+to get some advanced diagnostics information printed to "STDERR".
+
+ DATA_DYNAMICVALIDATOR_DEBUG=1
+
+=cut
+
+=head1 RESOURCES
+
+=over 4
+
+=item * Data::DPath
+
+L<https://metacpan.org/pod/Data::DPath>
+
+=back
+
+=cut
+
 =func validator
 
 The enter point for DynamicValidator.
@@ -113,7 +287,7 @@ The enter point for DynamicValidator.
    because => "...",
  )->errors;
 
-=cut 
+=cut
 
 sub validator {
     return Data::DynamicValidator->new(@_);
@@ -135,6 +309,9 @@ Performs validation based on 'on', 'should', 'because' and optional 'each'
 parameters. Returns the validator itself ($self), to allow further 'chain'
 invocations. The validation will not be performed, if some errors already
 have been detected.
+
+It is recommended to use overloaded function call, instead of this method
+call. (e.g. $validator->(...) instead of $validato->validate(...);
 
 =cut
 
