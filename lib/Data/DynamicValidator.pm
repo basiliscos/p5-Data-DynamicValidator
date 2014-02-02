@@ -32,6 +32,7 @@ use constant DEBUG => $ENV{DATA_DYNAMICVALIDATOR_DEBUG} || 0;
 
 
 
+
 sub validator {
     return Data::DynamicValidator->new(@_);
 }
@@ -312,6 +313,7 @@ version 0.01
  };
 
  use Data::DynamicValidator qw/validator/;
+ use Net::hostent;
 
  my $errors = validator($cfg)->(
    on      => '/features/*',
@@ -404,6 +406,13 @@ The enter point for DynamicValidator.
    should => sub { ... },
    because => "...",
  )->errors;
+
+=head1 Rationale
+
+There are complex data configurations, e.g. application configs. Not to
+check them on applicaiton startup is B<wrong>, because of sudden
+unexpected runtime errors can occur, which not-so-pleasent to detect.
+Write the code, that does full exhaustive checks, is B<boring>.
 
 =head1 AUTHOR
 
