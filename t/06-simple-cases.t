@@ -9,18 +9,18 @@ use Data::DynamicValidator qw/validator/;
 subtest 'route-application' => sub {
     my $data = { listen => [3000, 3001], };
     my ($r, $values);
-    ($r, $values) = validator($data)->apply('/listen/*' => sub { @_ == 2 });
+    ($r, $values) = validator($data)->_apply('/listen/*' => sub { @_ == 2 });
     ok $r, "positive simple path appliaction";
-    ($r, $values) = validator($data)->apply('/listen/*' => sub { @_ > 2 });
+    ($r, $values) = validator($data)->_apply('/listen/*' => sub { @_ > 2 });
     ok !$r, "simple path appliaction passed with false condition";
-    ($r, $values) = validator($data)->apply('/ABC/*' => sub { @_ == 0; });
+    ($r, $values) = validator($data)->_apply('/ABC/*' => sub { @_ == 0; });
     ok !$r, "void path appliaction with positve condition matches nothing";
-    ($r, $values) = validator($data)->apply('/ABC/*' => sub { @_ > 0 });
+    ($r, $values) = validator($data)->_apply('/ABC/*' => sub { @_ > 0 });
     ok !$r, "void path appliaction with false condition";
 };
 
 subtest 'undef-value-in-hash' => sub {
-    my ($r, $values) =  validator({x => undef})->apply('/x' => sub { 1 });
+    my ($r, $values) =  validator({x => undef})->_apply('/x' => sub { 1 });
     ok $r;
     is @{ $values->{routes} }, 1;
     is $values->{routes}->[0], "/x";

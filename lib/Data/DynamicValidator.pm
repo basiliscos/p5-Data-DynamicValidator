@@ -67,7 +67,7 @@ sub validate {
     my $selection_results;
     if ( !@$errors ) {
         my $success;
-        ($success, $selection_results) = $self->apply($on, $should);
+        ($success, $selection_results) = $self->_apply($on, $should);
         $self->report_error($because, $on)
             unless $success;
     }
@@ -114,26 +114,23 @@ sub _validate_children {
     $self->{_level}--;
 }
 
-=method select
 
-Takes path-like expandable expression and returns hashref of path with corresponding
-values from data, e.g.
+# Takes path-like expandable expression and returns hashref of path with corresponding
+# values from data, e.g.
 
- validator({ a => [5,'z']})->select('/a/*');
- # will return
- # {
- #   routes => ['/a/0', '/a/1'],
- #   values => [5, z],
- # }
+#  validator({ a => [5,'z']})->_select('/a/*');
+#  # will return
+#  # {
+#  #   routes => ['/a/0', '/a/1'],
+#  #   values => [5, z],
+#  # }
 
-Actualy routes are presented by Path objects.
+# Actualy routes are presented by Path objects.
 
-=cut
-
-sub select {
+sub _select {
     my ($self, $expession) = @_;
     my $data = $self->{_data};
-    my $routes = $self->expand_routes($expession);
+    my $routes = $self->_expand_routes($expession);
     my $values = [ map { $_->value($data) } @$routes ];
     return {
         routes => $routes,
@@ -142,22 +139,16 @@ sub select {
 }
 
 
-=method expand_routes
 
-Takes xpath-like expandable expression and sorted array of exapnded path e.g.
+# Takes xpath-like expandable expression and sorted array of exapnded path e.g.
+#  validator({ a => [5,'z']})->_expand_routes('/a/*');
+#  # will return [ '/a/0', '/a/1' ]
+#  validator({ a => [5,'z']})->_expand_routes('/a');
+#  # will return [ '/a' ]
+#  validator({ a => { b => [5,'z'], c => ['y']} })->_expand_routes('/a/*/*');
+#  # will return [ '/a/b/0', '/a/b/1', '/a/c/0' ]
 
- validator({ a => [5,'z']})->expand_routes('/a/*');
- # will return [ '/a/0', '/a/1' ]
-
- validator({ a => [5,'z']})->expand_routes('/a');
- # will return [ '/a' ]
-
- validator({ a => { b => [5,'z'], c => ['y']} })->expand_routes('/a/*/*');
- # will return [ '/a/b/0', '/a/b/1', '/a/c/0' ]
-
-=cut
-
-sub expand_routes {
+sub _expand_routes {
     my ($self, $expession) = @_;
     warn "-- Expanding routes for $expession\n" if DEBUG;
     my @routes = ( Path->new($expession) );
@@ -255,20 +246,17 @@ sub _filter {
     return ($element, $filter);
 }
 
-=method apply
 
-Takes the expandable expression and validation closure, then
-expands it, and applies the closure for every data piese,
-obtainted from expansion.
+# Takes the expandable expression and validation closure, then
+# expands it, and applies the closure for every data piese,
+# obtainted from expansion.
 
-Returns the list of success validation mark and the hash
-of details (obtained via select).
+# Returns the list of success validation mark and the hash
+# of details (obtained via _select).
 
-=cut
-
-sub apply {
+sub _apply {
     my ($self, $on, $should) = @_;
-    my $selection_results = $self->select($on);
+    my $selection_results = $self->_select($on);
     my $values = $selection_results->{values};
     my $result = $values && @$values && $should->( @$values );
     return ($result, $selection_results);
