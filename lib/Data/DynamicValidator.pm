@@ -407,7 +407,7 @@ The enter point for DynamicValidator.
    because => "...",
  )->errors;
 
-=head1 Rationale
+=head1 RATIONALE
 
 There are complex data configurations, e.g. application configs. Not to
 check them on applicaiton startup is B<wrong>, because of sudden
