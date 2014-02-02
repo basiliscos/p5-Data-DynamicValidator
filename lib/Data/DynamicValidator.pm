@@ -249,10 +249,10 @@ should appear at top-level, and it should either 'tcp' or 'upd' type.
 
  # Filtering capabilities samples:
 
- '/abc/*[size == 5]'   # filter array/hash by size
- '/abc/*[value eq "z"] # filter array/hash by value equality
- '/abc/*[index > 5]    # finter array by index
- '/abc/*[key =~ /def/] # finter hash by key
+ '/abc/*[size == 5]'    # filter array/hash by size
+ '/abc/*[value eq "z"]' # filter array/hash by value equality
+ '/abc/*[index > 5]'    # finter array by index
+ '/abc/*[key =~ /def/]' # finter hash by key
 
 =cut
 
