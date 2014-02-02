@@ -36,6 +36,8 @@ use constant DEBUG => $ENV{DATA_DYNAMICVALIDATOR_DEBUG} || 0;
 
 
 
+
+
 sub validator {
     return Data::DynamicValidator->new(@_);
 }
@@ -386,6 +388,11 @@ the C<should> parameter provides the closure, which will check the values
 gathered on via pointer. If the closure returns false, then the error will
 be recorded, with description, provided by C<because> parameter.
 
+To get the results of validation, you can call:
+
+ $v->is_valid; # returns true, if there is no validation errors
+ $v->errors;   # returns array reference, consisting of the met Errors
+
 =head1 METHODS
 
 =head2 validate
@@ -444,6 +451,36 @@ Write the code, that does full exhaustive checks, is B<boring>.
 
 This module offers to use DLS, that makes data validation funny yet
 understandable for the person, which provides the data.
+
+=head1 DATA PATH EXPRESSIONS
+
+ '/5'   # selects the 1st value in $data array
+ '/abc' # selects the value in hashref under key 'abc'
+
+ '/mojolicious/hypnotoad/pid_file'
+ # selects the value in
+ my $data = {
+   mojolicious => {
+     hypnotoad => {
+       pid_file => '/tmp/hypnotoad-ng.pid',
+     }
+   }
+ };
+
+ '/abc/*' # selects any values under 'abc' key: all values
+          # of array, it 'abc' points to array, all values
+          # of the hashref, if abc points arrayref
+          # or the string/number value otherwise
+
+=head1 RESOURCES
+
+=over 4
+
+=item * Data::DPath
+
+L<https://metacpan.org/pod/Data::DPath>
+
+=back
 
 =head1 AUTHOR
 
