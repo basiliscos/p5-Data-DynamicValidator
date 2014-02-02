@@ -2,7 +2,7 @@ package Data::DynamicValidator;
 {
   $Data::DynamicValidator::VERSION = '0.01';
 }
-#ABSTRACT: XPath-like and Perl union for flexible perl data structures validation
+#ABSTRACT: JPointer-like and Perl union for flexible perl data structures validation
 
 use strict;
 use warnings;
@@ -29,6 +29,8 @@ use parent qw/Exporter/;
 our @EXPORT_OK = qw/validator/;
 
 use constant DEBUG => $ENV{DATA_DYNAMICVALIDATOR_DEBUG} || 0;
+
+
 
 sub validator {
     return Data::DynamicValidator->new(@_);
@@ -62,7 +64,7 @@ sub validate {
     my $selection_results;
     if ( !@$errors ) {
         my $success;
-        ($success, $selection_results) = $self->apply($on, $should);
+        ($success, $selection_results) = $self->_apply($on, $should);
         $self->report_error($because, $on)
             unless $success;
     }
@@ -75,6 +77,7 @@ sub validate {
     return $self;
 }
 
+
 sub report_error {
     my ($self, $reason, $path) = @_;
     $path //= $self->{_current_path};
@@ -82,6 +85,15 @@ sub report_error {
         unless defined $path;
     push @{ $self->{_errors} }, Error->new($reason, $path);
 }
+
+
+sub is_valid { @{ $_[0]->{_errors} } == 0; }
+
+
+
+sub errors { $_[0]->{_errors} }
+
+### private/implementation methods
 
 sub _validate_children {
     my ($self, $selection_results, $each) = @_;
@@ -110,10 +122,22 @@ sub _validate_children {
 }
 
 
-sub select {
+# Takes path-like expandable expression and returns hashref of path with corresponding
+# values from data, e.g.
+
+#  validator({ a => [5,'z']})->_select('/a/*');
+#  # will return
+#  # {
+#  #   routes => ['/a/0', '/a/1'],
+#  #   values => [5, z],
+#  # }
+
+# Actualy routes are presented by Path objects.
+
+sub _select {
     my ($self, $expession) = @_;
     my $data = $self->{_data};
-    my $routes = $self->expand_routes($expession);
+    my $routes = $self->_expand_routes($expession);
     my $values = [ map { $_->value($data) } @$routes ];
     return {
         routes => $routes,
@@ -123,7 +147,15 @@ sub select {
 
 
 
-sub expand_routes {
+# Takes xpath-like expandable expression and sorted array of exapnded path e.g.
+#  validator({ a => [5,'z']})->_expand_routes('/a/*');
+#  # will return [ '/a/0', '/a/1' ]
+#  validator({ a => [5,'z']})->_expand_routes('/a');
+#  # will return [ '/a' ]
+#  validator({ a => { b => [5,'z'], c => ['y']} })->_expand_routes('/a/*/*');
+#  # will return [ '/a/b/0', '/a/b/1', '/a/c/0' ]
+
+sub _expand_routes {
     my ($self, $expession) = @_;
     warn "-- Expanding routes for $expession\n" if DEBUG;
     my @routes = ( Path->new($expession) );
@@ -221,17 +253,21 @@ sub _filter {
     return ($element, $filter);
 }
 
-sub apply {
+
+# Takes the expandable expression and validation closure, then
+# expands it, and applies the closure for every data piese,
+# obtainted from expansion.
+
+# Returns the list of success validation mark and the hash
+# of details (obtained via _select).
+
+sub _apply {
     my ($self, $on, $should) = @_;
-    my $selection_results = $self->select($on);
+    my $selection_results = $self->_select($on);
     my $values = $selection_results->{values};
     my $result = $values && @$values && $should->( @$values );
     return ($result, $selection_results);
 };
-
-sub is_valid { @{ $_[0]->{_errors} } == 0; }
-
-sub errors { $_[0]->{_errors} }
 
 1;
 
@@ -243,42 +279,131 @@ __END__
 
 =head1 NAME
 
-Data::DynamicValidator - XPath-like and Perl union for flexible perl data structures validation
+Data::DynamicValidator - JPointer-like and Perl union for flexible perl data structures validation
 
 =head1 VERSION
 
 version 0.01
 
+=head1 SYNOPSIS
+
+ my $my_complex_config = {
+    features => [
+        "a/f",
+        "application/feature1",
+        "application/feature2",
+    ],
+    service_points => {
+        localhost => {
+            "a/f" => { job_slots => 3, },
+            "application/feature1" => { job_slots => 5 },
+            "application/feature2" => { job_slots => 5 },
+        },
+        "127.0.0.1" => {
+            "application/feature2" => { job_slots => 5 },
+        },
+    },
+    mojolicious => {
+    	hypnotoad => {
+            pid_file => '/tmp/hypnotoad-ng.pid',
+            listen  => [ 'http://localhost:3000' ],
+        },
+    },
+ };
+
+ use Data::DynamicValidator qw/validator/;
+
+ my $errors = validator($cfg)->(
+   on      => '/features/*',
+   should  => sub { @_ > 0 },
+   because => "at least one feature should be defined",
+   each    => sub {
+     my $f = $_->();
+     shift->(
+       on      => "/service_points/*/`$f`/job_slots",
+       should  => sub { defined($_[0]) && $_[0] > 0 },
+       because => "at least 1 service point should be defined for feature '$f'",
+     )
+   }
+ )->(
+   on      => '/service_points/sp:*',
+   should  => sub { @_ > 0 },
+   because => "at least one service point should be defined",
+   each    => sub {
+     my $sp;
+     shift->report_error("SP '$sp' isn't resolvable")
+       unless gethost($sp);
+   }
+ )->(
+  on      => '/service_points/sp:*/f:*',
+  should  => sub { @_ > 0 },
+  because => "at least one feature under service point should be defined",
+  each    => sub {
+    my ($sp, $f);
+    shift->(
+      on      => "/features/`*[value eq '$f']`",
+      should  => sub { 1 },
+      because => "Feature '$f' of service point '$sp' should be decrlared in top-level features list",
+    )
+  },
+ )->(
+   on      => '/mojolicious/hypnotoad/pid_file',
+   should  => sub { @_ == 1 },
+   because => "hypnotoad pid_file should be defined",
+ )->(
+   on      => '/mojolicious/hypnotoad/listen/*',
+   should  => sub { @_ > 0 },
+   because => "hypnotoad listening interfaces defined",
+ )->errors;
+
+ print "all OK\n"
+  unless(@$errors);
+
 =head1 METHODS
 
 =head2 validate
 
-=head2 select
+Performs validation based on 'on', 'should', 'because' and optional 'each'
+parameters. Returns the validator itself ($self), to allow further 'chain'
+invocations. The validation will not be performed, if some errors already
+have been detected.
 
-Takes xpath-like expandable expression and returns hashref of path with corresponding
-values from data, e.g.
+=head2 report_error
 
- validator({ a => [5,'z']})->select('/a/*');
- # will return
- # {
- #   routes => ['/a/0', '/a/1']  => 5,
- #   values => [5, z],
- # }
+The method is used for custom errors reporing. It is mainly usable in 'each'
+closure.
 
-Actualy routes are presented by Path objects.
+ validator({ ports => [1000, 2000, 3000] })->(
+   on      => '/ports/port:*',
+   should  => sub { @_ > 0 },
+   because => "At least one listening port should be defined",
+   each    => sub {
+     my $port;
+     my $port_value = $port->();
+     shift->report_error("Port value $port_value isn't acceptable, because < 1000")
+       if($port_value < 1000);
+   }
+ );
 
-=head2 expand_routes
+=head2 is_valid
 
-Takes xpath-like expandable expression and sorted array of exapnded path e.g.
+Checks, weather validator already has errors
 
- validator({ a => [5,'z']})->expand_routes('/a/*');
- # will return [ '/a/0', '/a/1' ]
+=head2 errors
 
- validator({ a => [5,'z']})->expand_routes('/a');
- # will return [ '/a' ]
+Returns internal array of errors
 
- validator({ a => { b => [5,'z'], c => ['y']} })->expand_routes('/a/*/*');
- # will return [ '/a/b/0', '/a/b/1', '/a/c/0' ]
+=head1 FUNCTIONS
+
+=head2 validator
+
+The enter point for DynamicValidator.
+
+ my $errors = validator(...)->(
+   on => "...",
+   should => sub { ... },
+   because => "...",
+ )->errors;
 
 =head1 AUTHOR
 

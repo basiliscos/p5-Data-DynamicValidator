@@ -21,7 +21,10 @@ sub new {
 
 sub to_string{ $_[0]->{_reason} };
 
+
 sub reason { $_[0]->{_reason} };
+
+
 
 sub path { $_[0]->{_path} }
 
@@ -46,6 +49,14 @@ version 0.01
 =head2 to_string
 
 Stringizes to reason by default
+
+=head2 reason
+
+Returns the human-readable error description
+
+=head2 path
+
+Returns the path object, pointing to the error location
 
 =head1 AUTHOR
 
