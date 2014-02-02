@@ -33,6 +33,9 @@ use constant DEBUG => $ENV{DATA_DYNAMICVALIDATOR_DEBUG} || 0;
 
 
 
+
+
+
 sub validator {
     return Data::DynamicValidator->new(@_);
 }
@@ -361,6 +364,28 @@ version 0.01
  print "all OK\n"
   unless(@$errors);
 
+=head1 DESCRIPTION
+
+First of all, you should create Validator instance:
+
+ use Data::DynamicValidator qw/validator/;
+
+ my $data = { ports => [2222] };
+ my $v = validator($data);
+
+Then, actually do validation:
+
+ $v->(
+   on      => '/ports/*',
+   should  => sub { @_ > 0 },
+   because => 'At least one port should be defined at "ports" section',
+ );
+
+The C<on> parameter defines the data path, via JSON-pointer like expression;
+the C<should> parameter provides the closure, which will check the values
+gathered on via pointer. If the closure returns false, then the error will
+be recorded, with description, provided by C<because> parameter.
+
 =head1 METHODS
 
 =head2 validate
@@ -369,6 +394,9 @@ Performs validation based on 'on', 'should', 'because' and optional 'each'
 parameters. Returns the validator itself ($self), to allow further 'chain'
 invocations. The validation will not be performed, if some errors already
 have been detected.
+
+It is recommended to use overloaded function call, instead of this method
+call. (e.g. $validator->(...) instead of $validato->validate(...);
 
 =head2 report_error
 
