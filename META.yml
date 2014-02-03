@@ -21,6 +21,7 @@ name: Data-DynamicValidator
 requires:
   Devel::LexAlias: 0.05
   Eval::Closure: 0.11
+  List::MoreUtils: 0.33
   PadWalker: 1.98
   Try::Tiny: 0.18
   aliased: 0.31

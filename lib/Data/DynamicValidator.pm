@@ -555,10 +555,10 @@ understandable for the person, which provides the data.
 
  # Filtering capabilities samples:
 
- '/abc/*[size == 5]'   # filter array/hash by size
- '/abc/*[value eq "z"] # filter array/hash by value equality
- '/abc/*[index > 5]    # finter array by index
- '/abc/*[key =~ /def/] # finter hash by key
+ '/abc/*[size == 5]'    # filter array/hash by size
+ '/abc/*[value eq "z"]' # filter array/hash by value equality
+ '/abc/*[index > 5]'    # finter array by index
+ '/abc/*[key =~ /def/]' # finter hash by key
 
 =head1 DEBUGGING
 
