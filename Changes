@@ -1,4 +1,5 @@
 {{$NEXT}}
+    - Add missing dependency (List::MoreUtils)
 
 0.01      2014-02-03 01:52:42 Europe/Minsk
     - Initial release
