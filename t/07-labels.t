@@ -66,7 +66,7 @@ subtest 'simple-labels-in-path' => sub {
         each    => sub {
             my ($hash1, $array, $hash2);
             shift->(
-                on      => "/$hash1/$array/$hash2", # TODO: '/$hash1/$array/$hash2'
+                on      => "//$hash1/$array/$hash2", # TODO: '/$hash1/$array/$hash2'
                 should  => sub {
                     push @examined_values, $_[0];
                     return $_[0] > 0;

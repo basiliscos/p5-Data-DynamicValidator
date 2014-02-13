@@ -59,6 +59,13 @@ subtest 'rebase-simple' => sub {
                     @_ == 2 && $_[0] == 3 && $_[1] == 4;
                 },
                 because => '...r3..',
+            )->(
+                on      => '//1/zz/*',
+                should  => sub {
+                    push @visited_bases, "/1/zz/1";
+                    $_[0] == 6;
+                },
+                because => '...r5...',
             );
         });
     })->(
@@ -79,6 +86,7 @@ subtest 'rebase-simple' => sub {
         "/0/a/c",
         "/0/a/c/dd/v1",
         "/0/a/c/ee",
+        "/1/zz/1",
         "/1/zz/1",
     ], "visited routes with rebasing are correct";
 };

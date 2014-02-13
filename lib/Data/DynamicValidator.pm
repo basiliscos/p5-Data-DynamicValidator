@@ -298,7 +298,6 @@ sub new {
     my $self = {
         _data   => $data,
         _errors => [],
-        _level  => 0,
         _bases  => [],
     };
     return bless $self => $class;
@@ -420,7 +419,10 @@ sub current_base {
 sub _rebase_selector {
     my ($self, $selector) = @_;
     my $current_base = $self->current_base;
-    $current_base ? $current_base . $selector : $selector;
+    my $add_base = $current_base && $selector !~ /^\/{2,}/;
+    my $rebased = $add_base ? $current_base . $selector : $selector;
+    warn "-- Rebasing selector $selector to $rebased \n" if DEBUG;
+    return $rebased;
 }
 
 sub _validate_children {
@@ -428,9 +430,9 @@ sub _validate_children {
     my ($routes, $values) = @{$selection_results}{qw/routes values/};
     my $errors = $self->{_errors};
     my $data = $self->{_data};
-    $self->{_level}++;
     for my $i (0 .. @$routes-1) {
         my $route = $routes->[$i];
+        push @{ $self->{_bases} }, $route;
         my $value = $values->[$i];
         my $label_for = { map { $_ => 1 } ($route->labels) };
         # prepare context
@@ -444,9 +446,9 @@ sub _validate_children {
         # call
         $self->{_current_path} = $route;
         $each->($self, local $_ = Label->new('_', $route, $data));
+        pop @{ $self->{_bases} };
         last if(@$errors);
     }
-    $self->{_level}--;
 }
 
 
@@ -484,9 +486,11 @@ sub _select {
 #  # will return [ '/a/b/0', '/a/b/1', '/a/c/0' ]
 
 sub _expand_routes {
-    my ($self, $expession) = @_;
-    warn "-- Expanding routes for $expession\n" if DEBUG;
-    my @routes = ( Path->new($expession) );
+    my ($self, $expression) = @_;
+    warn "-- Expanding routes for $expression\n" if DEBUG;
+    # striping leading slashes
+    $expression =~ s/\/{2,}/\//;
+    my @routes = ( Path->new($expression) );
     my $result = [];
     while (@routes) {
         my $route = shift(@routes);

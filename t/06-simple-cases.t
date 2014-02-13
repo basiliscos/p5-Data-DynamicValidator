@@ -77,7 +77,7 @@ test_validator(
     because => '...',
     each    => sub {
         shift->(
-            on      => "/listen/$_",
+            on      => "//listen/$_",
             should  => sub { $_[0] > 0},
             because => "port should be positive",
         )
@@ -113,7 +113,7 @@ subtest 'simple-1-children-positive' => sub {
         because => '...',
         each    => sub {
             $v->(
-                on      => "/listen/$_",
+                on      => "//listen/$_",
                 should  => sub { $_[0] > 0},
                 because => "port should be positive",
             )

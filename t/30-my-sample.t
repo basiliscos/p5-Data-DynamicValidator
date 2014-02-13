@@ -56,7 +56,7 @@ subtest 'my-positive' => sub {
         each    => sub {
             my $f = $_->();
             shift->(
-                on      => "/service_points/*/`$f`/job_slots",
+                on      => "//service_points/*/`$f`/job_slots",
                 should  => sub { defined($_[0]) && $_[0] > 0 },
                 because => "at least 1 service point should be defined for feature '$f'",
             )
@@ -77,7 +77,7 @@ subtest 'my-positive' => sub {
         each    => sub {
             my ($sp, $f);
             shift->(
-                on      => "/features/`*[value eq '$f']`",
+                on      => "//features/`*[value eq '$f']`",
                 should  => sub { 1 },
                 because => "Feature '$f' of service point '$sp' should be decrlared in top-level features list",
             )
@@ -109,7 +109,7 @@ subtest 'my-demo-test' => sub {
         each    => sub {
             my $port = $_->();
             shift->(
-                on      => "/*[key eq $port]",
+                on      => "//*[key eq $port]",
                 should  => sub { @_ == 1 && any { $_[0] eq $_ } (qw/tcp udp/)  },
                 because => "The port $port should be declated at top-level as tcp or udp",
             )
