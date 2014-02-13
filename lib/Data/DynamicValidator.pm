@@ -299,6 +299,7 @@ sub new {
         _data   => $data,
         _errors => [],
         _level  => 0,
+        _bases  => [],
     };
     return bless $self => $class;
 }
@@ -332,8 +333,10 @@ sub validate {
     my $selection_results;
     if ( !@$errors ) {
         my $success;
-        ($success, $selection_results) = $self->_apply($on, $should);
-        $self->report_error($because, $on)
+        my $current_base = $self->current_base;
+        my $selector = $self->_rebase_selector($on);
+        ($success, $selection_results) = $self->_apply($selector, $should);
+        $self->report_error($because, $selector)
             unless $success;
     }
     # OK, now going to child rules if there is no errors
@@ -389,7 +392,36 @@ Returns internal array of errors
 
 sub errors { $_[0]->{_errors} }
 
+sub rebase {
+    my ($self, $expandable_route, $rule) = @_;
+    my $current_base = $self->current_base;
+    my $selector = $self->_rebase_selector($expandable_route);
+    my $scenario = $self->_select($selector);
+    my $number_of_routes = @{ $scenario->{routes} };
+    carp "The route '$expandable_route' is ambigious for rebasing (should be unique)"
+        if $number_of_routes > 1;
+
+    return $self if $number_of_routes == 0;
+
+    push @{ $self->{_bases} }, $scenario->{routes}->[0];
+    $rule->($self);
+    pop @{ $self->{_bases} };
+    return $self;
+}
+
+sub current_base {
+    my $bases = $_[0]->{_bases};
+    return undef unless @$bases;
+    return $bases->[-1];
+}
+
 ### private/implementation methods
+
+sub _rebase_selector {
+    my ($self, $selector) = @_;
+    my $current_base = $self->current_base;
+    $current_base ? $current_base . $selector : $selector;
+}
 
 sub _validate_children {
     my ($self, $selection_results, $each) = @_;
