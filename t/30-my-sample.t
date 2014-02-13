@@ -61,28 +61,30 @@ subtest 'my-positive' => sub {
                 because => "at least 1 service point should be defined for feature '$f'",
             )
         }
-    )->(
-        on      => '/service_points/sp:*',
-        should  => sub { @_ > 0 },
-        because => "at least one service point should be defined",
-        each    => sub {
-            my $sp;
-            shift->report_error("SP '$sp' isn't resolvable")
-                unless gethost($sp);
-        }
-    )->(
-        on      => '/service_points/sp:*/f:*',
-        should  => sub { @_ > 0 },
-        because => "at least one feature under service point should be defined",
-        each    => sub {
-            my ($sp, $f);
-            shift->(
-                on      => "//features/`*[value eq '$f']`",
-                should  => sub { 1 },
-                because => "Feature '$f' of service point '$sp' should be decrlared in top-level features list",
-            )
-        },
-    )->rebase('/mojolicious/hypnotoad' => sub {
+    )->rebase('/service_points' => sub {
+        shift->(
+            on      => '/sp:*',
+            should  => sub { @_ > 0 },
+            because => "at least one service point should be defined",
+            each    => sub {
+                my $sp;
+                shift->report_error("SP '$sp' isn't resolvable")
+                    unless gethost($sp);
+            }
+        )->(
+            on      => '/sp:*/f:*',
+            should  => sub { @_ > 0 },
+            because => "at least one feature under service point should be defined",
+            each    => sub {
+                my ($sp, $f);
+                shift->(
+                    on      => "//features/`*[value eq '$f']`",
+                    should  => sub { 1 },
+                    because => "Feature '$f' of service point '$sp' should be decrlared in top-level features list",
+                )
+            },
+        )
+    })->rebase('/mojolicious/hypnotoad' => sub {
         shift->(
             on      => '/pid_file',
             should  => sub { @_ == 1 },
