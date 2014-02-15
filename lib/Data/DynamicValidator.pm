@@ -37,7 +37,6 @@ use constant DEBUG => $ENV{DATA_DYNAMICVALIDATOR_DEBUG} || 0;
 
 
 
-
 sub validator {
     return Data::DynamicValidator->new(@_);
 }
@@ -402,6 +401,16 @@ version 0.02
  print "all OK\n"
   unless(@$errors);
 
+=head2 RATIONALE
+
+There are complex data configurations, e.g. application configs. Not to
+check them on applicaiton startup is B<wrong>, because of sudden
+unexpected runtime errors can occur, which not-so-pleasent to detect.
+Write the code, that does full exhaustive checks, is B<boring>.
+
+This module offers to use DLS, that makes data validation funny yet
+understandable for the person, which provides the data.
+
 =head1 DESCRIPTION
 
 First of all, you should create Validator instance:
@@ -541,6 +550,13 @@ should appear at top-level, and it should be either 'tcp' or 'upd' type.
  '/abc/*[index > 5]'    # finter array by index
  '/abc/*[key =~ /def/]' # finter hash by key
 
+=head2 DEBUGGING
+
+You can set the DATA_DYNAMICVALIDATOR_DEBUG environment variable
+to get some advanced diagnostics information printed to "STDERR".
+
+ DATA_DYNAMICVALIDATOR_DEBUG=1
+
 =head1 METHODS
 
 =head2 validate
@@ -589,23 +605,6 @@ The enter point for DynamicValidator.
    should => sub { ... },
    because => "...",
  )->errors;
-
-=head1 RATIONALE
-
-There are complex data configurations, e.g. application configs. Not to
-check them on applicaiton startup is B<wrong>, because of sudden
-unexpected runtime errors can occur, which not-so-pleasent to detect.
-Write the code, that does full exhaustive checks, is B<boring>.
-
-This module offers to use DLS, that makes data validation funny yet
-understandable for the person, which provides the data.
-
-=head1 DEBUGGING
-
-You can set the DATA_DYNAMICVALIDATOR_DEBUG environment variable
-to get some advanced diagnostics information printed to "STDERR".
-
- DATA_DYNAMICVALIDATOR_DEBUG=1
 
 =head1 RESOURCES
 
