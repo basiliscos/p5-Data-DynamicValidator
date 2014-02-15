@@ -100,6 +100,7 @@ sub is_valid { @{ $_[0]->{_errors} } == 0; }
 
 sub errors { $_[0]->{_errors} }
 
+
 sub rebase {
     my ($self, $expandable_route, $rule) = @_;
     my $current_base = $self->current_base;
@@ -116,6 +117,7 @@ sub rebase {
     pop @{ $self->{_bases} };
     return $self;
 }
+
 
 sub current_base {
     my $bases = $_[0]->{_bases};
@@ -517,11 +519,11 @@ should appear at top-level, and it should be either 'tcp' or 'upd' type.
   )->errors;
 
 As you probably noted, the the path expression contains two slashes at C<on> rule
-inside <each> rule. This is required to search data from the root, because
+inside C<each> rule. This is required to search data from the root, because
 the current element is been set as B<base> before calling C<each>, so all expressions
-inside C<each> are relative to the current lement (aka base).
+inside C<each> are relative to the current element (aka base).
 
-You can change the base explicit way, via C<rebase> method:
+You can change the base explicit way via C<rebase> method:
 
  my $data = {
     mojolicious => {
@@ -624,6 +626,21 @@ Checks, whether validator already has errors
 =head2 errors
 
 Returns internal array of errors
+
+=head2 rebase
+
+Temporaly sets the new base to the specified route, and invokes the closure
+with the validator instance, i.e.
+
+ $v->('/a' => $closure->($v))
+
+If the data can't be found at the specified route, the C<closure> is not
+invoked.
+
+=head2 current_base
+
+Returns the current base, which is set only inside C<rebase> call or C<each> closure.
+Returns undef is there is no current base.
 
 =head1 FUNCTIONS
 
