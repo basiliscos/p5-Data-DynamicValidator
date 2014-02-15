@@ -1,6 +1,6 @@
 package Data::DynamicValidator;
 {
-  $Data::DynamicValidator::VERSION = '0.02';
+  $Data::DynamicValidator::VERSION = '0.03';
 }
 #ABSTRACT: JPointer-like and Perl union for flexible perl data structures validation
 
@@ -326,7 +326,7 @@ Data::DynamicValidator - JPointer-like and Perl union for flexible perl data str
 
 =head1 VERSION
 
-version 0.02
+version 0.03
 
 =head1 SYNOPSIS
 

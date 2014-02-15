@@ -1,6 +1,6 @@
 package Data::DynamicValidator::Error;
 {
-  $Data::DynamicValidator::Error::VERSION = '0.02';
+  $Data::DynamicValidator::Error::VERSION = '0.03';
 }
 # ABSTRACT: Class holds validation error: reason and location
 
@@ -42,7 +42,7 @@ Data::DynamicValidator::Error - Class holds validation error: reason and locatio
 
 =head1 VERSION
 
-version 0.02
+version 0.03
 
 =head1 METHODS
 

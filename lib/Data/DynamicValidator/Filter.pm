@@ -1,6 +1,6 @@
 package Data::DynamicValidator::Filter;
 {
-  $Data::DynamicValidator::Filter::VERSION = '0.02';
+  $Data::DynamicValidator::Filter::VERSION = '0.03';
 }
 # ABSTRACT: Class responds for filtering data paths
 
@@ -100,7 +100,7 @@ Data::DynamicValidator::Filter - Class responds for filtering data paths
 
 =head1 VERSION
 
-version 0.02
+version 0.03
 
 =head1 AUTHOR
 

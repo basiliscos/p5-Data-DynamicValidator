@@ -1,6 +1,6 @@
 package Data::DynamicValidator::Label;
 {
-  $Data::DynamicValidator::Label::VERSION = '0.02';
+  $Data::DynamicValidator::Label::VERSION = '0.03';
 }
 # ABSTRACT: Class holds label and allows extract current value under it in subject
 
@@ -49,7 +49,7 @@ Data::DynamicValidator::Label - Class holds label and allows extract current val
 
 =head1 VERSION
 
-version 0.02
+version 0.03
 
 =head1 METHODS
 

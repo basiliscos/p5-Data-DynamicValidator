@@ -1,6 +1,6 @@
 package Data::DynamicValidator::Path;
 {
-  $Data::DynamicValidator::Path::VERSION = '0.02';
+  $Data::DynamicValidator::Path::VERSION = '0.03';
 }
 # ABSTRACT: Class represents "splitted" to labelled componets path.
 
@@ -131,7 +131,7 @@ Data::DynamicValidator::Path - Class represents "splitted" to labelled componets
 
 =head1 VERSION
 
-version 0.02
+version 0.03
 
 =head1 METHODS
 

@@ -28,4 +28,4 @@ requires:
   perl: 5.012
 resources:
   repository: https://github.com/basiliscos/p5-Data-DynamicValidator.git
-version: 0.02
+version: 0.03
