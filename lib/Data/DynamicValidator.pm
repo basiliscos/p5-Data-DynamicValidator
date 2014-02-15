@@ -63,7 +63,7 @@ use constant DEBUG => $ENV{DATA_DYNAMICVALIDATOR_DEBUG} || 0;
    each    => sub {
      my $f = $_->();
      shift->(
-       on      => "/service_points/*/`$f`/job_slots",
+       on      => "//service_points/*/`$f`/job_slots",
        should  => sub { defined($_[0]) && $_[0] > 0 },
        because => "at least 1 service point should be defined for feature '$f'",
      )
@@ -84,20 +84,22 @@ use constant DEBUG => $ENV{DATA_DYNAMICVALIDATOR_DEBUG} || 0;
   each    => sub {
     my ($sp, $f);
     shift->(
-      on      => "/features/`*[value eq '$f']`",
+      on      => "//features/`*[value eq '$f']`",
       should  => sub { 1 },
       because => "Feature '$f' of service point '$sp' should be decrlared in top-level features list",
     )
   },
- )->(
-   on      => '/mojolicious/hypnotoad/pid_file',
-   should  => sub { @_ == 1 },
-   because => "hypnotoad pid_file should be defined",
- )->(
-   on      => '/mojolicious/hypnotoad/listen/*',
-   should  => sub { @_ > 0 },
-   because => "hypnotoad listening interfaces defined",
- )->errors;
+  })->rebase('/mojolicious/hypnotoad' => sub {
+    shift->(
+      on      => '/pid_file',
+      should  => sub { @_ == 1 },
+      because => "hypnotoad pid_file should be defined",
+    )->(
+      on      => '/listen/*',
+      should  => sub { @_ > 0 },
+      because => "hypnotoad listening interfaces defined",
+    );
+  })->errors;
 
  print "all OK\n"
   unless(@$errors);
@@ -212,12 +214,40 @@ should appear at top-level, and it should be either 'tcp' or 'upd' type.
    each    => sub {
      my $port = $_->();
      shift->(
-       on      => "/*[key eq $port]",
+       on      => "//*[key eq $port]",
        should  => sub { @_ == 1 && any { $_[0] eq $_ } (qw/tcp udp/)  },
        because => "The port $port should be declated at top-level as tcp or udp",
       )
    }
   )->errors;
+
+As you probably noted, the the path expression contains two slashes at C<on> rule
+inside C<each> rule. This is required to search data from the root, because
+the current element is been set as B<base> before calling C<each>, so all expressions
+inside C<each> are relative to the current element (aka base).
+
+You can change the base explicit way via C<rebase> method:
+
+ my $data = {
+    mojolicious => {
+    	hypnotoad => {
+            pid_file => '/tmp/hypnotoad-ng.pid',
+            listen  => [ 'http://localhost:3000' ],
+        },
+    },
+ };
+
+ $v->rebase('/mojolicious/hypnotoad' => sub {
+    shift->(
+      on      => '/pid_file',
+      should  => sub { @_ == 1 },
+      because => "hypnotoad pid_file should be defined",
+    )->(
+      on      => '/listen/*',
+      should  => sub { @_ > 0 },
+      because => "hypnotoad listening interfaces defined",
+    );
+ })->errors;
 
 =cut
 
@@ -237,7 +267,8 @@ should appear at top-level, and it should be either 'tcp' or 'upd' type.
      }
    }
  };
- '/mojolicious/hypnotoad/pid_file' # point to pid_file
+ '/mojolicious/hypnotoad/pid_file'  # point to pid_file
+ '//mojolicious/hypnotoad/pid_file' # point to pid_file (independently of current base)
 
  # Escaping by back-quotes sample
  $data => { "a/b" => { c => 5 } }
@@ -394,6 +425,18 @@ Returns internal array of errors
 
 sub errors { $_[0]->{_errors} }
 
+=method rebase
+
+Temporaly sets the new base to the specified route, and invokes the closure
+with the validator instance, i.e.
+
+ $v->('/a' => $closure->($v))
+
+If the data can't be found at the specified route, the C<closure> is not
+invoked.
+
+=cut
+
 sub rebase {
     my ($self, $expandable_route, $rule) = @_;
     my $current_base = $self->current_base;
@@ -410,6 +453,13 @@ sub rebase {
     pop @{ $self->{_bases} };
     return $self;
 }
+
+=method current_base
+
+Returns the current base, which is set only inside C<rebase> call or C<each> closure.
+Returns undef is there is no current base.
+
+=cut
 
 sub current_base {
     my $bases = $_[0]->{_bases};
