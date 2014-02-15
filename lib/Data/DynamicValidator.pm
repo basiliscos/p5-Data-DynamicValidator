@@ -405,11 +405,11 @@ version 0.02
 
 There are complex data configurations, e.g. application configs. Not to
 check them on applicaiton startup is B<wrong>, because of sudden
-unexpected runtime errors can occur, which not-so-pleasent to detect.
+unexpected runtime errors can occur, which are not-so-pleasent to detect.
 Write the code, that does full exhaustive checks, is B<boring>.
 
-This module offers to use DLS, that makes data validation funny yet
-understandable for the person, which provides the data.
+This module tries to offer to use DLS, that makes data validation fun
+for developer yet understandable for the person, which provides the data.
 
 =head1 DESCRIPTION
 
