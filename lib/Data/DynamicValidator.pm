@@ -431,7 +431,11 @@ To get the results of validation, you can call:
 
 C<on>/C<should> parameters are convenient for validation of presense of
 something, but they aren't so handy in checking of B<individual> values.
-To handle that the optional C<each> pareter has been introduced.
+It should be mentioned, that C<should> closure, always takes an array of
+the selected by C<on>, even if only one element has been selected.
+
+To handle B<individual> values in more convenient way  the optional
+C<each> parameter has been introduced.
 
  my $data = { ports => [2222, 3333] };
  $v->(
@@ -483,7 +487,7 @@ Consider the following example:
 
 Let's validate it. The validation rule sounds as: there is 'ports' section,
 where at least one port > 1000 should be declated, and then the same port
-should appear at top-level, and it should either 'tcp' or 'upd' type.
+should appear at top-level, and it should be either 'tcp' or 'upd' type.
 
  use List::MoreUtils qw/any/;
 
@@ -505,17 +509,17 @@ should appear at top-level, and it should either 'tcp' or 'upd' type.
 
 =head2 validate
 
-Performs validation based on 'on', 'should', 'because' and optional 'each'
-parameters. Returns the validator itself ($self), to allow further 'chain'
+Performs validation based on C<on>, C<should>, C<because> and optional C<each>
+parameters. Returns the validator itself (C<$self>), to allow further C<chain>
 invocations. The validation will not be performed, if some errors already
 have been detected.
 
 It is recommended to use overloaded function call, instead of this method
-call. (e.g. $validator->(...) instead of $validato->validate(...);
+call. (e.g. C<$validator->(...)> instead of C<$validato->validate(...)> )
 
 =head2 report_error
 
-The method is used for custom errors reporing. It is mainly usable in 'each'
+The method is used for custom errors reporing. It is mainly usable in C<each>
 closure.
 
  validator({ ports => [1000, 2000, 3000] })->(
@@ -532,7 +536,7 @@ closure.
 
 =head2 is_valid
 
-Checks, weather validator already has errors
+Checks, whether validator already has errors
 
 =head2 errors
 
