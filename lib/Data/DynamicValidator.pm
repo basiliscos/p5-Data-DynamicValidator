@@ -388,15 +388,17 @@ version 0.02
       because => "Feature '$f' of service point '$sp' should be decrlared in top-level features list",
     )
   },
- )->(
-   on      => '/mojolicious/hypnotoad/pid_file',
-   should  => sub { @_ == 1 },
-   because => "hypnotoad pid_file should be defined",
- )->(
-   on      => '/mojolicious/hypnotoad/listen/*',
-   should  => sub { @_ > 0 },
-   because => "hypnotoad listening interfaces defined",
- )->errors;
+  })->rebase('/mojolicious/hypnotoad' => sub {
+    shift->(
+      on      => '/pid_file',
+      should  => sub { @_ == 1 },
+      because => "hypnotoad pid_file should be defined",
+    )->(
+      on      => '/listen/*',
+      should  => sub { @_ > 0 },
+      because => "hypnotoad listening interfaces defined",
+    );
+  })->errors;
 
  print "all OK\n"
   unless(@$errors);
