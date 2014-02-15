@@ -104,18 +104,17 @@ use constant DEBUG => $ENV{DATA_DYNAMICVALIDATOR_DEBUG} || 0;
 
 =cut
 
-=head1 RATIONALE
+=head2 RATIONALE
 
 There are complex data configurations, e.g. application configs. Not to
 check them on applicaiton startup is B<wrong>, because of sudden
-unexpected runtime errors can occur, which not-so-pleasent to detect.
+unexpected runtime errors can occur, which are not-so-pleasent to detect.
 Write the code, that does full exhaustive checks, is B<boring>.
 
-This module offers to use DLS, that makes data validation funny yet
-understandable for the person, which provides the data.
+This module tries to offer to use DLS, that makes data validation fun
+for developer yet understandable for the person, which provides the data.
 
 =cut
-
 
 =head1 DESCRIPTION
 
@@ -146,7 +145,11 @@ To get the results of validation, you can call:
 
 C<on>/C<should> parameters are convenient for validation of presense of
 something, but they aren't so handy in checking of B<individual> values.
-To handle that the optional C<each> pareter has been introduced.
+It should be mentioned, that C<should> closure, always takes an array of
+the selected by C<on>, even if only one element has been selected.
+
+To handle B<individual> values in more convenient way  the optional
+C<each> parameter has been introduced.
 
  my $data = { ports => [2222, 3333] };
  $v->(
@@ -198,7 +201,7 @@ Consider the following example:
 
 Let's validate it. The validation rule sounds as: there is 'ports' section,
 where at least one port > 1000 should be declated, and then the same port
-should appear at top-level, and it should either 'tcp' or 'upd' type.
+should appear at top-level, and it should be either 'tcp' or 'upd' type.
 
  use List::MoreUtils qw/any/;
 
@@ -218,7 +221,7 @@ should appear at top-level, and it should either 'tcp' or 'upd' type.
 
 =cut
 
-=head1 DATA PATH EXPRESSIONS
+=head2 DATA PATH EXPRESSIONS
 
  my $data = [qw/a b c d e/];
  '/2'   # selects the 'c' value in $data array
@@ -256,7 +259,7 @@ should appear at top-level, and it should either 'tcp' or 'upd' type.
 
 =cut
 
-=head1 DEBUGGING
+=head2 DEBUGGING
 
 You can set the DATA_DYNAMICVALIDATOR_DEBUG environment variable
 to get some advanced diagnostics information printed to "STDERR".
@@ -305,13 +308,13 @@ sub new {
 
 =method validate
 
-Performs validation based on 'on', 'should', 'because' and optional 'each'
-parameters. Returns the validator itself ($self), to allow further 'chain'
+Performs validation based on C<on>, C<should>, C<because> and optional C<each>
+parameters. Returns the validator itself (C<$self>), to allow further C<chain>
 invocations. The validation will not be performed, if some errors already
 have been detected.
 
 It is recommended to use overloaded function call, instead of this method
-call. (e.g. $validator->(...) instead of $validato->validate(...);
+call. (e.g. C<$validator->(...)> instead of C<$validato->validate(...)> )
 
 =cut
 
@@ -349,7 +352,7 @@ sub validate {
 
 =method report_error
 
-The method is used for custom errors reporing. It is mainly usable in 'each'
+The method is used for custom errors reporing. It is mainly usable in C<each>
 closure.
 
  validator({ ports => [1000, 2000, 3000] })->(
@@ -376,7 +379,7 @@ sub report_error {
 
 =method is_valid
 
-Checks, weather validator already has errors
+Checks, whether validator already has errors
 
 =cut
 
