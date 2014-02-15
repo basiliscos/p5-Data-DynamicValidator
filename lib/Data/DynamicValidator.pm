@@ -505,6 +505,42 @@ should appear at top-level, and it should be either 'tcp' or 'upd' type.
    }
   )->errors;
 
+=head2 DATA PATH EXPRESSIONS
+
+ my $data = [qw/a b c d e/];
+ '/2'   # selects the 'c' value in $data array
+ '/-1'  # selects the 'e' value in $data array
+
+ $data = { abc => 123 };
+ '/abc' # selects the '123' value in hashref under key 'abc'
+
+ $data = {
+   mojolicious => {
+     hypnotoad => {
+       pid_file => '/tmp/hypnotoad-ng.pid',
+     }
+   }
+ };
+ '/mojolicious/hypnotoad/pid_file' # point to pid_file
+
+ # Escaping by back-quotes sample
+ $data => { "a/b" => { c => 5 } }
+ '/`a/b`/c' # selects 5
+
+ $data = {abc => [qw/a b/]};   # 1
+ $data = {abc => { c => 'd'}}; # 2
+ $data = {abc => 7};           # 3
+ '/abc/*' # selects 'a' and 'b' in 1st case
+          # the 'd' in 2nd case
+          # the number 7 in 3rd case
+
+ # Filtering capabilities samples:
+
+ '/abc/*[size == 5]'    # filter array/hash by size
+ '/abc/*[value eq "z"]' # filter array/hash by value equality
+ '/abc/*[index > 5]'    # finter array by index
+ '/abc/*[key =~ /def/]' # finter hash by key
+
 =head1 METHODS
 
 =head2 validate
@@ -563,42 +599,6 @@ Write the code, that does full exhaustive checks, is B<boring>.
 
 This module offers to use DLS, that makes data validation funny yet
 understandable for the person, which provides the data.
-
-=head1 DATA PATH EXPRESSIONS
-
- my $data = [qw/a b c d e/];
- '/2'   # selects the 'c' value in $data array
- '/-1'  # selects the 'e' value in $data array
-
- $data = { abc => 123 };
- '/abc' # selects the '123' value in hashref under key 'abc'
-
- $data = {
-   mojolicious => {
-     hypnotoad => {
-       pid_file => '/tmp/hypnotoad-ng.pid',
-     }
-   }
- };
- '/mojolicious/hypnotoad/pid_file' # point to pid_file
-
- # Escaping by back-quotes sample
- $data => { "a/b" => { c => 5 } }
- '/`a/b`/c' # selects 5
-
- $data = {abc => [qw/a b/]};   # 1
- $data = {abc => { c => 'd'}}; # 2
- $data = {abc => 7};           # 3
- '/abc/*' # selects 'a' and 'b' in 1st case
-          # the 'd' in 2nd case
-          # the number 7 in 3rd case
-
- # Filtering capabilities samples:
-
- '/abc/*[size == 5]'    # filter array/hash by size
- '/abc/*[value eq "z"]' # filter array/hash by value equality
- '/abc/*[index > 5]'    # finter array by index
- '/abc/*[key =~ /def/]' # finter hash by key
 
 =head1 DEBUGGING
 
