@@ -362,7 +362,7 @@ version 0.02
    each    => sub {
      my $f = $_->();
      shift->(
-       on      => "/service_points/*/`$f`/job_slots",
+       on      => "//service_points/*/`$f`/job_slots",
        should  => sub { defined($_[0]) && $_[0] > 0 },
        because => "at least 1 service point should be defined for feature '$f'",
      )
@@ -383,7 +383,7 @@ version 0.02
   each    => sub {
     my ($sp, $f);
     shift->(
-      on      => "/features/`*[value eq '$f']`",
+      on      => "//features/`*[value eq '$f']`",
       should  => sub { 1 },
       because => "Feature '$f' of service point '$sp' should be decrlared in top-level features list",
     )
@@ -509,12 +509,40 @@ should appear at top-level, and it should be either 'tcp' or 'upd' type.
    each    => sub {
      my $port = $_->();
      shift->(
-       on      => "/*[key eq $port]",
+       on      => "//*[key eq $port]",
        should  => sub { @_ == 1 && any { $_[0] eq $_ } (qw/tcp udp/)  },
        because => "The port $port should be declated at top-level as tcp or udp",
       )
    }
   )->errors;
+
+As you probably noted, the the path expression contains two slashes at C<on> rule
+inside <each> rule. This is required to search data from the root, because
+the current element is been set as B<base> before calling C<each>, so all expressions
+inside C<each> are relative to the current lement (aka base).
+
+You can change the base explicit way, via C<rebase> method:
+
+ my $data = {
+    mojolicious => {
+    	hypnotoad => {
+            pid_file => '/tmp/hypnotoad-ng.pid',
+            listen  => [ 'http://localhost:3000' ],
+        },
+    },
+ };
+
+ $v->rebase('/mojolicious/hypnotoad' => sub {
+    shift->(
+      on      => '/pid_file',
+      should  => sub { @_ == 1 },
+      because => "hypnotoad pid_file should be defined",
+    )->(
+      on      => '/listen/*',
+      should  => sub { @_ > 0 },
+      because => "hypnotoad listening interfaces defined",
+    );
+ })->errors;
 
 =head2 DATA PATH EXPRESSIONS
 
@@ -532,7 +560,8 @@ should appear at top-level, and it should be either 'tcp' or 'upd' type.
      }
    }
  };
- '/mojolicious/hypnotoad/pid_file' # point to pid_file
+ '/mojolicious/hypnotoad/pid_file'  # point to pid_file
+ '//mojolicious/hypnotoad/pid_file' # point to pid_file (independently of current base)
 
  # Escaping by back-quotes sample
  $data => { "a/b" => { c => 5 } }
