@@ -19,4 +19,5 @@ t/08-escaping.t
 t/09-filter.t
 t/10-filtering.t
 t/11-rebase.t
+t/12-error-path.t
 t/30-my-sample.t

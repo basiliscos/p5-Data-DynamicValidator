@@ -72,8 +72,15 @@ sub validate {
         my $current_base = $self->current_base;
         my $selector = $self->_rebase_selector($on);
         ($success, $selection_results) = $self->_apply($selector, $should);
-        $self->report_error($because, $selector)
-            unless $success;
+        if (!$success) {
+            # if we met an error, and there is only 1 error path
+            # we report with expanded path, istead of unexpanded
+            my $error_routes = $selection_results->{routes};
+            my $reported_error_path = $error_routes && @$error_routes == 1
+                ? $error_routes->[0]
+                : $selector;
+            $self->report_error($because, $reported_error_path);
+        }
     }
     # OK, now going to child rules if there is no errors
     if ( !@$errors && $each  ) {
