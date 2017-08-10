@@ -1,4 +1,5 @@
 {{$NEXT}}
+    - Auto generate META.json using dzil plugin [MetaJSON].
     - Fix tests, drop List::MoreUtil dependency
 
 0.03      2014-02-15 16:00:10 Europe/Minsk
